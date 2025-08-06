@@ -1,0 +1,4 @@
+.bg-gradient-indigo-purple {
+  background: linear-gradient(to bottom, #1e3a8a, #6b21a8); /* indigo-900 to purple-900 */
+  color: white;
+}
