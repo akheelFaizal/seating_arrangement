@@ -1,0 +1,7 @@
+body {
+  background: #f0f0f0;
+  font-family: system-ui, sans-serif;
+}
+:root {
+  --yellow: #facc15;
+}
