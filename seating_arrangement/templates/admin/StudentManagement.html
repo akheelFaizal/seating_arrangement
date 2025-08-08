@@ -1,0 +1,191 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Student Management</title>
+
+    <!-- Bootstrap CSS -->
+    <link
+      href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css"
+      rel="stylesheet"
+    />
+    <!-- Bootstrap Icons -->
+    <link
+      href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.5/font/bootstrap-icons.css"
+      rel="stylesheet"
+    />
+    <!-- Your Custom CSS (if any) -->
+    <link href="{% static 'common.css' %}" rel="stylesheet" />
+  </head>
+
+  <body class="bg-light">
+    <div class="container-fluid min-vh-100 d-flex flex-column">
+      <div class="row flex-grow-1">
+        <!-- Sidebar -->
+        <div class="col-lg-2 d-none d-lg-block p-0 bg-white border-end">
+          {% include 'components/SideBar.html' %}
+        </div>
+
+        <!-- Main Content -->
+        <div class="col p-0">
+          {% include 'components/Header.html' with title="Student Management" %}
+
+          <!-- Main Inner Container -->
+          <div class="container-fluid py-4">
+            <!-- Upload Section -->
+            <div class="bg-white p-4 rounded shadow mb-4">
+              <h3 class="mb-4">
+                <i class="bi bi-upload me-2 text-primary"></i>Upload Student Data
+              </h3>
+              <div class="row g-4">
+                <div class="col-lg-6">
+                  <div
+                    class="border border-2 border-dashed border-secondary rounded p-4 text-center"
+                  >
+                    <input
+                      type="file"
+                      accept=".csv"
+                      class="d-none"
+                      id="file-upload"
+                    />
+                    <label for="file-upload" class="btn btn-outline-primary"
+                      >Choose File</label
+                    >
+                    <p class="text-muted mt-3">
+                      Upload CSV file with student data
+                    </p>
+                    <small class="text-muted"
+                      >Format: Roll Number, Reg No, Name, Department, Year</small
+                    >
+                  </div>
+                </div>
+                <div class="col-lg-6">
+                  <div class="bg-light p-3 rounded">
+                    <h5 class="text-primary">CSV Format Requirements:</h5>
+                    <ul class="text-muted small">
+                      <li>Column 1: Roll Number (e.g., CS001)</li>
+                      <li>Column 2: Registration Number (e.g., REG2021001)</li>
+                      <li>Column 3: Student Name</li>
+                      <li>Column 4: Department</li>
+                      <li>Column 5: Year (e.g., 3rd Year)</li>
+                    </ul>
+                  </div>
+                  <button class="btn btn-primary mt-3 w-100">
+                    <i class="bi bi-lightning me-2"></i>Auto-Assign Seats
+                  </button>
+                </div>
+              </div>
+            </div>
+
+            <!-- Filters -->
+            <div class="bg-white p-4 rounded shadow mb-4">
+              <div class="row g-3 mb-3">
+                <div class="col-md-3">
+                  <div class="input-group">
+                    <span class="input-group-text bg-white border-end-0">
+                      <i class="bi bi-search"></i>
+                    </span>
+                    <input
+                      type="text"
+                      class="form-control border-start-0"
+                      placeholder="Search students..."
+                    />
+                  </div>
+                </div>
+                <div class="col-md-3">
+                  <select class="form-select">
+                    <option>All Departments</option>
+                    <option>Computer Science</option>
+                    <option>Electrical</option>
+                    <option>Mechanical</option>
+                  </select>
+                </div>
+                <div class="col-md-3">
+                  <select class="form-select">
+                    <option>All Years</option>
+                    <option>1st Year</option>
+                    <option>2nd Year</option>
+                    <option>3rd Year</option>
+                    <option>4th Year</option>
+                  </select>
+                </div>
+                <div class="col-md-3">
+                  <button class="btn btn-outline-secondary w-100">
+                    <i class="bi bi-download me-2"></i>Export
+                  </button>
+                </div>
+              </div>
+
+              <!-- Table -->
+              <div class="table-responsive">
+                <table class="table">
+                  <thead class="table-light">
+                    <tr>
+                      <th>Roll No.</th>
+                      <th>Reg No.</th>
+                      <th>Name</th>
+                      <th>Department</th>
+                      <th>Year</th>
+                      <th>Seat</th>
+                      <th>Actions</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    <tr>
+                      <td>CS001</td>
+                      <td>REG2021001</td>
+                      <td>John Doe</td>
+                      <td>Computer Science</td>
+                      <td>3rd Year</td>
+                      <td><span class="badge bg-success">A101</span></td>
+                      <td>
+                        <button class="btn btn-sm btn-outline-primary me-1">
+                          <i class="bi bi-pencil"></i>
+                        </button>
+                        <button class="btn btn-sm btn-outline-danger">
+                          <i class="bi bi-trash"></i>
+                        </button>
+                      </td>
+                    </tr>
+                    <!-- Add more student rows dynamically -->
+                  </tbody>
+                </table>
+              </div>
+
+              <!-- Pagination -->
+              <div
+                class="d-flex justify-content-between align-items-center mt-3"
+              >
+                <small class="text-muted"
+                  >Showing 1 to 10 of 50 students</small
+                >
+                <nav>
+                  <ul class="pagination pagination-sm mb-0">
+                    <li class="page-item disabled">
+                      <a class="page-link">Previous</a>
+                    </li>
+                    <li class="page-item active">
+                      <a class="page-link">1</a>
+                    </li>
+                    <li class="page-item">
+                      <a class="page-link">2</a>
+                    </li>
+                    <li class="page-item">
+                      <a class="page-link">Next</a>
+                    </li>
+                  </ul>
+                </nav>
+              </div>
+            </div>
+            <!-- End main student management content -->
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Bootstrap JS -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+  </body>
+</html>
