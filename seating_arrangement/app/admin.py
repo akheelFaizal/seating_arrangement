@@ -8,7 +8,6 @@ from .models import *
 
 #student info
 
-
 @admin.register(Department)
 class DepartmentAdmin(admin.ModelAdmin):
     list_display = ['id', 'name']
