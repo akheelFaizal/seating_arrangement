@@ -11,6 +11,13 @@ def StudentLogin(request):
   
 def StudentManagement(request):
     return render(request, 'admin/StudentManagement.html')
+  
+def SeatingArrangement(request):
+    return render(request, 'admin/SeatingArrangement.html')
+
+  
+def ExamSchedule(request):
+    return render(request, 'admin/ExamSchedule.html')
 
   
 

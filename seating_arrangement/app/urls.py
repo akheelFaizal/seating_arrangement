@@ -22,4 +22,6 @@ urlpatterns = [
     path('', views.index),
     path('studentlogin/',views.StudentLogin),
     path('student-management/',views.StudentManagement),
+    path('seating-arrangement/',views.SeatingArrangement),
+    path('exam/',views.ExamSchedule),
 ]
