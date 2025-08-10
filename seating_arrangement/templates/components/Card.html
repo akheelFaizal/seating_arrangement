@@ -1,0 +1,17 @@
+<div
+  class="p-4 rounded shadow-lg text-white"
+  style="background-image: linear-gradient(to right, {{ color_start }}, {{ color_end }} );"
+>
+  <div class="d-flex justify-content-between align-items-center">
+    <div>
+      <p class="text-white-50 mb-1 small fw-medium">{{ title }}</p>
+      <h4 class="mb-0 fw-bold">{{ value }}</h4>
+      <div class="d-flex align-items-center mt-2">
+        <i class="bi bi-graph-up me-1"></i>
+        <small class="text-white-50">{{ trend }} from last month</small>
+      </div>
+      
+    </div>
+    <i class="bi {{ icon }} fs-2 text-white-50"></i>    
+  </div>
+</div>
