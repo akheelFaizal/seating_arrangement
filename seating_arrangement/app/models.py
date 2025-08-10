@@ -67,6 +67,7 @@ class Room(models.Model):
         return self.room_number
 
 
+
 #seating info
 
 class Seating(models.Model):
