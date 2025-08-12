@@ -4,6 +4,7 @@ from django.shortcuts import render, redirect
 def index(request):
       return render(request, 'admin/Admin.html')
 
+#student
 
 def StudentLogin(request):
     return render(request, 'student/studentLogin.html')
@@ -11,7 +12,18 @@ def StudentLogin(request):
 def StudentOverView(request):
     return render(request, 'student/studentOverView.html')
 
+def StudentSeatview(request):
+    return render(request, 'student/studentSeatview.html')
+
+def StudentResultView(request):
+    return render(request, 'student/studentResultView.html')
+
+def StudentExamDetail(request):
+    return render(request,'student/StudentExamDetail.html')
   
+
+#admin
+
 def StudentManagement(request):
     return render(request, 'admin/StudentManagement.html')
   

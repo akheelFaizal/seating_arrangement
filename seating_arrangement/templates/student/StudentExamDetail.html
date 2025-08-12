@@ -1,0 +1,153 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    {% load static %}
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Upcoming Exams</title>
+    <link href="{% static 'sidebar.css' %}" rel="stylesheet" />
+    <link href="{% static 'common.css' %}" rel="stylesheet" />
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet" />
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.5/font/bootstrap-icons.css" rel="stylesheet" />
+    <style>
+        .glass-bg {
+            background: rgba(255,255,255,0.88);
+            backdrop-filter: blur(8px);
+            border-radius: 18px;
+            box-shadow: 0 6px 24px rgba(60,72,88,0.1);
+            padding: 30px;
+            margin-bottom: 2rem;
+        }
+        .exam-list-item {
+            border-bottom: 1px solid #e3e6f0;
+            padding: 15px 0;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        .exam-info {
+            flex-grow: 1;
+        }
+        .exam-status {
+            min-width: 100px;
+            text-align: center;
+        }
+        .badge-scheduled {
+            background-color: #22c55e;
+            color: white;
+            padding: 6px 14px;
+            border-radius: 14px;
+            font-weight: 600;
+        }
+        .badge-pending {
+            background-color: #fbbf24;
+            color: #4a4a4a;
+            padding: 6px 14px;
+            border-radius: 14px;
+            font-weight: 600;
+        }
+        .badge-cancelled {
+            background-color: #ef4444;
+            color: white;
+            padding: 6px 14px;
+            border-radius: 14px;
+            font-weight: 600;
+        }
+    </style>
+</head>
+<body class="bg-light">
+
+<div class="container-fluid min-vh-100 d-flex flex-column">
+    <div class="row flex-grow-1">
+
+        <!-- Sidebar -->
+        <div id="sidebarWrapper" class="col-lg-2 d-none d-lg-block p-0 bg-white border-end">
+            {% include 'components/studentsidebar.html' %}
+        </div>
+
+        <!-- Main Content -->
+        <div id="mainContent" class="col p-0">
+            {% include 'components/Header.html' with title="Upcoming Exams" %}
+
+            <div class="container-fluid py-4">
+
+                <div class="row g-3">
+              <!-- Card 1 -->
+              <div class="col-12 col-sm-6 col-lg-3">
+                {% include 'components/Card.html' with title="Roll Number" value=21003438 icon="bi bi-person-badge"  color_start="#3b82f6" color_end="#2563eb" %}
+              </div>
+              <!-- Card 2 -->
+              <div class="col-12 col-sm-6 col-lg-3">
+                {% include 'components/Card.html' with title="Name" value="John"  icon="bi-people-fill"  color_start="#22c55e" color_end="#16a34a" color_start="#22c55e" color_end="#16a34a" %}
+              </div>
+              <!-- Card 3 -->
+              <div class="col-12 col-sm-6 col-lg-3">
+                {% include 'components/Card.html' with title="Next Exam" value="Mathematics" icon="bi-calendar-event" color_start="#a855f7" color_end="#7e22ce" %}
+              </div>
+              <!-- Card 4 -->
+              <div class="col-12 col-sm-6 col-lg-3">
+                {% include 'components/Card.html' with title="Room" value="A10123" icon="bi bi-door-open"  color_start="#f97316" color_end="#ea580c" %}
+              </div>
+            </div>
+                <!-- Upcoming Exams List -->
+                <div class="glass-bg">
+                    <h5 class="fw-bold mb-4 text-secondary">All Upcoming Exams</h5>
+
+                    <div class="exam-list-item">
+                        <div class="exam-info">
+                            <strong>Mathematics</strong> <br />
+                            <small class="text-muted">Aug 14, 2025 at 10:00 AM</small> <br />
+                            <small class="text-muted">Room A101</small>
+                        </div>
+                        <div class="exam-status">
+                            <span class="badge-scheduled">Scheduled</span>
+                        </div>
+                    </div>
+
+                    <div class="exam-list-item">
+                        <div class="exam-info">
+                            <strong>Physics</strong> <br />
+                            <small class="text-muted">Aug 17, 2025 at 2:00 PM</small> <br />
+                            <small class="text-muted">Room B203</small>
+                        </div>
+                        <div class="exam-status">
+                            <span class="badge-pending">Pending</span>
+                        </div>
+                    </div>
+
+                    <div class="exam-list-item">
+                        <div class="exam-info">
+                            <strong>Chemistry</strong> <br />
+                            <small class="text-muted">Aug 19, 2025 at 9:00 AM</small> <br />
+                            <small class="text-muted">Room C110</small>
+                        </div>
+                        <div class="exam-status">
+                            <span class="badge-pending">Pending</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Announcements -->
+                <div class="glass-bg mt-4">
+                    <h5 class="fw-bold mb-3 text-secondary">
+                        <i class="bi bi-megaphone-fill me-2 text-warning"></i> Latest Announcements
+                    </h5>
+                    <div class="p-3 mb-2 rounded bg-light border">
+                        <strong>Exam Guidelines Released</strong><br />
+                        <small>Make sure to carry your hall ticket and a valid ID card.</small>
+                    </div>
+                    <div class="p-3 mb-2 rounded bg-light border">
+                        <strong>Lab Access Notice</strong><br />
+                        <small>Labs will be closed during the exam week for maintenance.</small>
+                    </div>
+                </div>
+
+            </div> <!-- container-fluid -->
+        </div> <!-- mainContent -->
+
+    </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>

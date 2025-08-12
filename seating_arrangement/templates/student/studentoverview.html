@@ -44,7 +44,7 @@
 
         <!-- Sidebar -->
         <div id="sidebarWrapper" class="col-lg-2 d-none d-lg-block p-0 bg-white border-end">
-            {% include 'components/SideBar.html' %}
+            {% include 'components/studentsidebar.html' %}
         </div>
 
         <!-- Main Content -->
@@ -55,34 +55,21 @@
 
                 <!-- Top Info Cards -->
                 <div class="row g-4">
-                    <div class="col-12 col-sm-6 col-lg-3">
-                        <div class="p-4 dashboard-card" style="background: linear-gradient(135deg,#3b82f6,#2563eb);">
+                    <div class="col-12 col-sm-6 col-lg-6">
+                        <div class="p-4 dashboard-card" style="background: linear-gradient(135deg,#a855f7,#7e22ce);">
                             <i class="bi bi-person-badge fs-2"></i>
                             <h5 class="mt-3">Roll Number</h5>
                             <h3 class="fw-bold">2025CS101</h3>
                         </div>
                     </div>
-                    <div class="col-12 col-sm-6 col-lg-3">
-                        <div class="p-4 dashboard-card" style="background: linear-gradient(135deg,#22c55e,#16a34a);">
+                    <div class="col-12 col-sm-6 col-lg-6">
+                        <div class="p-4 dashboard-card" style="background: linear-gradient(135deg,#f97316,#ea580c);">
                             <i class="bi bi-person-fill fs-2"></i>
                             <h5 class="mt-3">Name</h5>
                             <h3 class="fw-bold">John Doe</h3>
                         </div>
                     </div>
-                    <div class="col-12 col-sm-6 col-lg-3">
-                        <div class="p-4 dashboard-card" style="background: linear-gradient(135deg,#a855f7,#7e22ce);">
-                            <i class="bi bi-file-earmark-pdf fs-2"></i>
-                            <h5 class="mt-3">Hall Ticket</h5>
-                            <a href="{% url 'download_hallticket' %}" class="btn btn-light btn-sm mt-2"><i class="bi bi-download me-1"></i> Download</a>
-                        </div>
-                    </div>
-                    <div class="col-12 col-sm-6 col-lg-3">
-                        <div class="p-4 dashboard-card" style="background: linear-gradient(135deg,#f97316,#ea580c);">
-                            <i class="bi bi-door-open fs-2"></i>
-                            <h5 class="mt-3">Class Seat</h5>
-                            <a href="#" class="btn btn-light btn-sm mt-2"><i class="bi bi-eye me-1"></i> View</a>
-                        </div>
-                    </div>
+                
                 </div>
 
                 <!-- Hall Ticket and Class Seat -->
@@ -91,7 +78,7 @@
                         <div class="section-box">
                             <h5 class="fw-bold mb-3"><i class="bi bi-file-earmark-pdf me-2 text-primary"></i> Hall Ticket Download</h5>
                             <p class="text-muted">Click below to download your exam hall ticket.</p>
-                            <a href="{% url 'download_hallticket' %}" class="btn btn-primary">
+                            <a href="" class="btn btn-primary">
                                 <i class="bi bi-download me-2"></i> Download PDF
                             </a>
                         </div>
@@ -115,7 +102,7 @@
 
                 <!-- News Section -->
                 <div class="row mt-4">
-                    <div class="col-12">
+                    <div class="col-6">     
                         <div class="section-box">
                             <h5 class="fw-bold mb-3"><i class="bi bi-megaphone-fill me-2 text-warning"></i> Latest Announcements</h5>
                             <div class="p-3 bg-light rounded news-item mb-2">

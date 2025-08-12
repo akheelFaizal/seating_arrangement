@@ -25,6 +25,9 @@ urlpatterns = [
 
     path('student/login/',views.StudentLogin),
     path('student/overview',views.StudentOverView),
+    path('student/seatview',views.StudentSeatview),
+    path('student/resultview',views.StudentResultView),
+    path('student/examdetail',views.StudentExamDetail),
 
     #admin
     path('', views.index),
