@@ -20,9 +20,16 @@ from . import views
 
 
 urlpatterns = [
+
+    #student
+
+    path('student/login/',views.StudentLogin),
+    path('student/overview',views.StudentOverView),
+
+    #admin
     path('', views.index),
-    path('studentlogin/',views.StudentLogin),
     path('student-management/',views.StudentManagement),
     path('seating-arrangement/',views.SeatingArrangement),
-    path('exam/',views.ExamSchedule),
+    path('exam/',views.ExamSchedule)
+    
 ]

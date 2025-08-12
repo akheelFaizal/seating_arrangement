@@ -8,6 +8,9 @@ def index(request):
 def StudentLogin(request):
     return render(request, 'student/studentLogin.html')
 
+def StudentOverView(request):
+    return render(request, 'student/studentOverView.html')
+
   
 def StudentManagement(request):
     return render(request, 'admin/StudentManagement.html')
