@@ -23,7 +23,7 @@ urlpatterns = [
 
     #student
 
-    path('student/login/',views.StudentLogin),
+    path('student/login',views.StudentLogin),
     path('student/overview',views.StudentOverView),
     path('student/seatview',views.StudentSeatview),
     path('student/resultview',views.StudentResultView),
