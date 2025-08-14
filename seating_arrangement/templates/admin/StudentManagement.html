@@ -36,7 +36,7 @@
           <!-- Main Inner Container -->
           <div class="container-fluid py-4">
             <!-- Upload Section -->
-            <div class="bg-white p-4 rounded shadow mb-4">
+            <!-- <div class="bg-white p-4 rounded shadow mb-4">
               <h3 class="mb-4">
                 <i class="bi bi-upload me-2 text-primary"></i>Upload Student
                 Data
@@ -80,7 +80,7 @@
                   </button>
                 </div>
               </div>
-            </div>
+            </div> -->
 
             <!-- Filters -->
             <div class="bg-white p-4 rounded shadow mb-4">
@@ -100,9 +100,10 @@
                 <div class="col-md-3">
                   <select class="form-select">
                     <option>All Departments</option>
-                    <option>Computer Science</option>
-                    <option>Electrical</option>
-                    <option>Mechanical</option>
+                    {% for dept in departments %}
+
+                      <option value="1">{{ dept }}</option>
+                    {% endfor %}
                   </select>
                 </div>
                 <div class="col-md-3">
