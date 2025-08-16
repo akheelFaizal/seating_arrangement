@@ -34,7 +34,9 @@ def StudentManagement(request):
     return render(request, 'admin/StudentManagement.html', {'departments':departments})
   
 def SeatingArrangement(request):
-    return render(request, 'admin/SeatingArrangement.html')
+    rooms = Room.objects.all()
+    print(rooms)
+    return render(request, 'admin/SeatingArrangement.html', {'rooms': rooms})
 
   
 def ExamSchedule(request):
