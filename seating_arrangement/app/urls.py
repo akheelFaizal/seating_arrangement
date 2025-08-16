@@ -18,13 +18,12 @@ urlpatterns = [
     path('seating-arrangement/', views.SeatingArrangement, name='seating_arrangement'),
     path('exam/', views.ExamSchedule, name='exam_schedule'),
     
-    # functionalities
+    # admin functionalities
     path('upload_students/', views.upload_students, name='upload_students'),
     path('add_room/', views.add_room, name='add_room'),
     path('assign_seats/<int:exam_id>/', views.assign_seats, name='assign_seats'),
-
-
-
-   
+    path("add-exam/", views.add_exam, name="add_exam"),
+    path('edit-exam/<int:exam_id>/', views.edit_exam, name='edit_exam'),
+    path('delete-exam/<int:exam_id>/', views.delete_exam, name='delete_exam'),
 
 ]

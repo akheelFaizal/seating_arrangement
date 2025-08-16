@@ -1,4 +1,5 @@
 from django.db import models
+from datetime import timedelta, datetime
 
 # Create your models here.
 
@@ -55,6 +56,7 @@ class Exam(models.Model):
 
     def __str__(self):
         return self.subject_name
+    
 
 #room info
 

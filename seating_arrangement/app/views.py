@@ -1,10 +1,12 @@
-from django.shortcuts import render, redirect
+from django.shortcuts import render, redirect, get_object_or_404
 from . models import *
 from django.contrib import messages
 import csv
 import random
 from django.contrib.auth.hashers import make_password
 from django.contrib.auth.hashers import check_password
+from datetime import timedelta
+
 
 
 def index(request):
@@ -115,12 +117,15 @@ def StudentManagement(request):
   
 def SeatingArrangement(request):
     rooms = Room.objects.all()
+    exams = Exam.objects.all().first()
     print(rooms)
-    return render(request, 'admin/SeatingArrangement.html', {'rooms': rooms})
+    return render(request, 'admin/SeatingArrangement.html', {'rooms': rooms, 'exam':exams})
 
   
 def ExamSchedule(request):
-    return render(request, 'admin/ExamSchedule.html')
+    exams = Exam.objects.all().order_by("date", "time")
+    departments = Department.objects.all() 
+    return render(request, 'admin/ExamSchedule.html', {'exams':exams, 'departments':departments})
 
 
 # functionalities   
@@ -144,9 +149,9 @@ def upload_students(request):
                         'course': course
                     }
                 )
-        messages.success(request, "All student files uploaded successfully!")  # Toast will show this
+        messages.success(request, "All student files uploaded successfully!")  
     else:
-        messages.error(request, "No files were selected for upload!")          # Toast will show this
+        messages.error(request, "No files were selected for upload!")          
     
     return redirect("seating_arrangement")
 
@@ -160,7 +165,7 @@ def add_room(request):
         if supervisor_id:
             supervisor = Invigilator.objects.get(id=supervisor_id)
         Room.objects.create(room_number=room_number, capacity=int(capacity), supervisor=supervisor)
-        messages.success(request, f"Room {room_number} added successfully!")   # Toast will show this
+        messages.success(request, f"Room {room_number} added successfully!")   
     
     return redirect("seating_arrangement")
 
@@ -168,38 +173,29 @@ def add_room(request):
 def assign_seats(request, exam_id):
     exam = Exam.objects.get(id=exam_id)
     
-    # Clear previous allocations
     Seating.objects.filter(exam=exam).delete()
 
-    # Fetch all students for this exam
     students = list(Student.objects.all())
     rooms = list(Room.objects.all())
     
-    # Shuffle students globally (all departments)
     random.shuffle(students)
     
-    # Initialize room seat trackers
     room_indices = {room.id: 0 for room in rooms}
     
-    # Keep track of last course in each room to avoid consecutive same-course seating
     last_course_in_room = {room.id: None for room in rooms}
     
     for student in students:
-        # List of rooms that are not full
         available_rooms = [room for room in rooms if room_indices[room.id] < room.capacity]
         if not available_rooms:
-            break  # No seats left
+            break  
         
-        # Filter rooms to avoid same-course neighbors if possible
         filtered_rooms = [room for room in available_rooms 
                           if last_course_in_room[room.id] != student.course]
         if filtered_rooms:
             chosen_room = random.choice(filtered_rooms)
         else:
-            # If all rooms have same-course last student, pick randomly
             chosen_room = random.choice(available_rooms)
         
-        # Assign seat
         seat_number = room_indices[chosen_room.id] + 1
         Seating.objects.create(
             student=student,
@@ -208,7 +204,6 @@ def assign_seats(request, exam_id):
             seat_number=seat_number
         )
         
-        # Update trackers
         room_indices[chosen_room.id] += 1
         last_course_in_room[chosen_room.id] = student.course
 
@@ -218,3 +213,61 @@ def assign_seats(request, exam_id):
   
   
 
+def add_exam(request):
+    if request.method == "POST":
+        subject_code = request.POST.get("subject_code")
+        subject_name = request.POST.get("subject_name")
+        department_id = request.POST.get("department")
+        date = request.POST.get("date")
+        time = request.POST.get("time")
+        duration_str = request.POST.get("duration")  # e.g. "02:00:00"
+
+        # Convert duration string ("HH:MM:SS") to timedelta
+        try:
+            hours, minutes, seconds = map(int, duration_str.split(":"))
+            duration = timedelta(hours=hours, minutes=minutes, seconds=seconds)
+        except ValueError:
+            messages.error(request, "Invalid duration format. Please use HH:MM:SS.")
+            return redirect("exam_schedule")
+
+        department = Department.objects.get(id=department_id)
+
+        Exam.objects.create(
+            subject_code=subject_code,
+            subject_name=subject_name,
+            department=department,
+            date=date,
+            time=time,
+            duration=duration
+        )
+
+        messages.success(request, f"Exam '{subject_name}' added successfully!")
+        return redirect("exam_schedule")
+
+    return redirect("exam_schedule")
+
+def edit_exam(request, exam_id):
+    exam = get_object_or_404(Exam, id=exam_id)
+    departments = Department.objects.all()
+
+    if request.method == "POST":
+        exam.subject_code = request.POST.get("subject_code")
+        exam.subject_name = request.POST.get("subject_name")
+        dept_id = request.POST.get("department")
+        exam.department = Department.objects.get(id=dept_id)
+        exam.date = request.POST.get("date")
+        exam.time = request.POST.get("time")
+        h, m, s = map(int, request.POST.get("duration").split(":"))
+        exam.duration = timedelta(hours=h, minutes=m, seconds=s)
+        exam.save()
+        messages.success(request, f"Exam '{exam.subject_name}' updated successfully!")
+        return redirect("exam_schedule")
+    return redirect("exam_schedule")
+
+
+def delete_exam(request, exam_id):
+    exam = get_object_or_404(Exam, id=exam_id)
+    exam_name = exam.subject_name
+    exam.delete()
+    messages.success(request, f"Exam '{exam_name}' deleted successfully!")
+    return redirect("exam_schedule")
