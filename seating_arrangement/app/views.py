@@ -11,8 +11,6 @@ def index(request):
       return render(request, 'admin/Admin.html')
 
 #student
-
-
 def StudentLogin(request):
     if request.method == 'POST':
         roll_number = request.POST.get('roll_number')
@@ -125,8 +123,7 @@ def ExamSchedule(request):
     return render(request, 'admin/ExamSchedule.html')
 
 
-# functionalities
-
+# functionalities   
 
 def upload_students(request):
     if request.method == "POST" and request.FILES.getlist("files"):
@@ -147,9 +144,9 @@ def upload_students(request):
                         'course': course
                     }
                 )
-        messages.success(request, "All student files uploaded successfully.")
+        messages.success(request, "All student files uploaded successfully!")  # Toast will show this
     else:
-        messages.error(request, "No files were selected for upload.")
+        messages.error(request, "No files were selected for upload!")          # Toast will show this
     
     return redirect("seating_arrangement")
 
@@ -161,12 +158,11 @@ def add_room(request):
         supervisor_id = request.POST.get("supervisor")
         supervisor = None
         if supervisor_id:
-            from .models import Invigilator
             supervisor = Invigilator.objects.get(id=supervisor_id)
         Room.objects.create(room_number=room_number, capacity=int(capacity), supervisor=supervisor)
-        messages.success(request, f"Room {room_number} added successfully.")
+        messages.success(request, f"Room {room_number} added successfully!")   # Toast will show this
+    
     return redirect("seating_arrangement")
-
 
 
 def assign_seats(request, exam_id):

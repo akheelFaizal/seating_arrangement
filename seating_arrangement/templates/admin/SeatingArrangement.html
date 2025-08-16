@@ -26,16 +26,21 @@
           {% include 'components/Header.html' %}
 
           <div class="container-fluid py-4">
-
             <!-- Upload Section -->
             <div class="bg-white p-4 rounded shadow mb-4">
               <h4 class="mb-3">
-                <i class="bi bi-upload me-2 text-primary"></i>Upload Student Lists
+                <i class="bi bi-upload me-2 text-primary"></i>Upload Student
+                Lists
               </h4>
               <p class="text-muted small mb-4">
-                Upload CSV files for all departments having exams on the same day.
+                Upload CSV files for all departments having exams on the same
+                day.
               </p>
-              <form method="POST" action="{% url 'upload_students' %}" enctype="multipart/form-data">
+              <form
+                method="POST"
+                action="{% url 'upload_students' %}"
+                enctype="multipart/form-data"
+              >
                 {% csrf_token %}
                 <input
                   type="file"
@@ -90,11 +95,11 @@
               </form>
               <div class="mt-3">
                 {% for room in rooms %}
-                  <span class="badge bg-primary me-2">
-                    {{ room.room_number }} - {{ room.capacity }} seats
-                  </span>
+                <span class="badge bg-primary me-2">
+                  {{ room.room_number }} - {{ room.capacity }} seats
+                </span>
                 {% empty %}
-                  <p class="text-muted small">No rooms added yet.</p>
+                <p class="text-muted small">No rooms added yet.</p>
                 {% endfor %}
               </div>
             </div>
@@ -102,57 +107,92 @@
             <!-- Assign Seats -->
             <div class="bg-white p-4 rounded shadow mb-4 text-center">
               {% if exam %}
-                <form method="POST" action="{% url 'assign_seats' exam.id %}">
-                  {% csrf_token %}
-                  <button class="btn btn-lg btn-primary px-5">
-                    <i class="bi bi-lightning-charge me-2"></i>Assign Seats (Anti-Cheat Mode)
-                  </button>
-                </form>
+              <form method="POST" action="{% url 'assign_seats' exam.id %}">
+                {% csrf_token %}
+                <button class="btn btn-lg btn-primary px-5">
+                  <i class="bi bi-lightning-charge me-2"></i>Assign Seats
+                  (Anti-Cheat Mode)
+                </button>
+              </form>
               {% else %}
-                <p class="text-muted">⚠ No active exam found.</p>
+              <p class="text-muted">⚠ No active exam found.</p>
               {% endif %}
               <p class="text-muted small mt-2">
-                Students will be distributed randomly across rooms to reduce cheating.
+                Students will be distributed randomly across rooms to reduce
+                cheating.
               </p>
             </div>
 
             <!-- Preview Allocation -->
             <div class="bg-white p-4 rounded shadow">
               <h4 class="mb-3">
-                <i class="bi bi-grid me-2 text-warning"></i>Seat Allocation Preview
+                <i class="bi bi-grid me-2 text-warning"></i>Seat Allocation
+                Preview
               </h4>
               <div class="row g-4">
                 {% for room in rooms %}
-                  <div class="col-md-4">
-                    <div class="border rounded p-3">
-                      <h6 class="fw-bold">{{ room.room_number }}</h6>
-                      <small class="text-muted">
-                        Capacity: {{ room.capacity }} | Assigned: {{ room.seating_set.count }}
-                      </small>
-                      <hr />
-                      <div class="d-flex flex-wrap gap-1">
-                        {% for seat in room.seating_set.all %}
-                          {% cycle 'bg-success' 'bg-danger' 'bg-warning' as seat_color silent %}
-                          <span class="badge {{ seat_color }}">
-                            {{ seat.student.roll_number }}
-                          </span>
-                        {% empty %}
-                          <p class="text-muted small">No students assigned yet.</p>
-                        {% endfor %}
-                      </div>
+                <div class="col-md-4">
+                  <div class="border rounded p-3">
+                    <h6 class="fw-bold">{{ room.room_number }}</h6>
+                    <small class="text-muted">
+                      Capacity: {{ room.capacity }} | Assigned: {{
+                      room.seating_set.count }}
+                    </small>
+                    <hr />
+                    <div class="d-flex flex-wrap gap-1">
+                      {% for seat in room.seating_set.all %} {% cycle
+                      'bg-success' 'bg-danger' 'bg-warning' as seat_color silent
+                      %}
+                      <span class="badge {{ seat_color }}">
+                        {{ seat.student.roll_number }}
+                      </span>
+                      {% empty %}
+                      <p class="text-muted small">No students assigned yet.</p>
+                      {% endfor %}
                     </div>
                   </div>
+                </div>
                 {% empty %}
-                  <p class="text-muted">No seat allocations yet.</p>
+                <p class="text-muted">No seat allocations yet.</p>
                 {% endfor %}
               </div>
             </div>
-
           </div>
         </div>
       </div>
     </div>
+    <!-- Toast container -->
+    <div class="position-fixed bottom-0 end-0 p-3" style="z-index: 11">
+      {% for message in messages %}
+      <div
+        class="toast align-items-center text-bg-success border-0 mb-2"
+        role="alert"
+        aria-live="assertive"
+        aria-atomic="true"
+      >
+        <div class="d-flex">
+          <div class="toast-body">{{ message }}</div>
+          <button
+            type="button"
+            class="btn-close btn-close-white me-2 m-auto"
+            data-bs-dismiss="toast"
+            aria-label="Close"
+          ></button>
+        </div>
+      </div>
+      {% endfor %}
+    </div>
 
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+      document.addEventListener("DOMContentLoaded", function () {
+        var toastElList = [].slice.call(document.querySelectorAll(".toast"));
+        var toastList = toastElList.map(function (toastEl) {
+          var toast = new bootstrap.Toast(toastEl, { delay: 3000 }); // 3 seconds
+          toast.show();
+          return toast;
+        });
+      });
+    </script>
   </body>
 </html>
