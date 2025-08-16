@@ -31,7 +31,7 @@ urlpatterns = [
     path('student/signupaction',views.StudentSignupAction),
 
     #admin
-    path('admin', views.index),
+    path('adminhome', views.index),
     path('student-management/',views.StudentManagement),
     path('seating-arrangement/',views.SeatingArrangement),
     path('exam/',views.ExamSchedule)

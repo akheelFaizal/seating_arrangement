@@ -105,8 +105,7 @@ def StudentResultView(request):
 
 def StudentExamDetail(request):
     return render(request,'student/StudentExamDetail.html')\
-
-
+    
 #admin
 
 def StudentManagement(request):
