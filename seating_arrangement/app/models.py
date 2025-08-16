@@ -23,6 +23,7 @@ class Student(models.Model):
     roll_number = models.CharField(max_length=20, unique=True)
     name = models.CharField(max_length=100)
     course = models.ForeignKey(Course, on_delete=models.CASCADE)
+    password = models.CharField(max_length=128,default="testpassword")
     department = models.ForeignKey(Department, on_delete=models.CASCADE)
 
     def __str__(self):
