@@ -67,7 +67,7 @@ def upload_students(request):
     else:
         messages.error(request, "No files were selected for upload.")
     
-    return redirect("seat_allocation_home")
+    return redirect("seating_arrangement")
 
 
 def add_room(request):
@@ -81,7 +81,7 @@ def add_room(request):
             supervisor = Invigilator.objects.get(id=supervisor_id)
         Room.objects.create(room_number=room_number, capacity=int(capacity), supervisor=supervisor)
         messages.success(request, f"Room {room_number} added successfully.")
-    return redirect("SeatingArrangement")
+    return redirect("seating_arrangement")
 
 
 
@@ -133,7 +133,7 @@ def assign_seats(request, exam_id):
         last_course_in_room[chosen_room.id] = student.course
 
     messages.success(request, "Seats assigned successfully with anti-cheat logic.")
-    return redirect("SeatingArrangement")
+    return redirect("seating_arrangement")
 
   
   
