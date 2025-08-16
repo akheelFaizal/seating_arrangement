@@ -105,16 +105,14 @@ def StudentResultView(request):
 
 def StudentExamDetail(request):
     return render(request,'student/StudentExamDetail.html')\
-    
 
-
-
- 
 
 #admin
 
 def StudentManagement(request):
-    return render(request, 'admin/StudentManagement.html')
+    departments = Department.objects.all()
+    print(departments)
+    return render(request, 'admin/StudentManagement.html', {'departments':departments})
   
 def SeatingArrangement(request):
     return render(request, 'admin/SeatingArrangement.html')
