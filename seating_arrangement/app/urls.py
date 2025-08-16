@@ -22,7 +22,6 @@ from . import views
 urlpatterns = [
 
     #student
-
     path('student/login/',views.StudentLogin),
     path('student/overview',views.StudentOverView),
     path('student/seatview',views.StudentSeatview),
@@ -33,6 +32,10 @@ urlpatterns = [
     path('', views.index),
     path('student-management/',views.StudentManagement),
     path('seating-arrangement/',views.SeatingArrangement),
-    path('exam/',views.ExamSchedule)
+    path('exam/',views.ExamSchedule),
     
+    #functionalities
+    path('upload-students/', views.upload_students),
+    path('add-room/', views.add_room),
+    path('assign-seats/<int:exam_id>/', views.assign_seats),
 ]

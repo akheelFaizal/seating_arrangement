@@ -1,97 +1,130 @@
 <!DOCTYPE html>
 <html lang="en">
-<head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Seat Allocation</title>
-  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
-  <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css" rel="stylesheet">
-</head>
-<body class="bg-light">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Seat Allocation</title>
+    <link
+      href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css"
+      rel="stylesheet"
+    />
+    <link
+      href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css"
+      rel="stylesheet"
+    />
+  </head>
+  <body class="bg-light">
+    <div class="container-fluid min-vh-100 d-flex flex-column">
+      <div class="row flex-grow-1">
+        <!-- Sidebar -->
+        <div class="col-lg-2 d-none d-lg-block p-0 bg-white border-end">
+          {% include 'components/SideBar.html' %}
+        </div>
 
-  
-  <div class="container-fluid min-vh-100 d-flex flex-column">
-    <div class="row flex-grow-1">
-      
-      <!-- Sidebar -->
-      <div class="col-lg-2 d-none d-lg-block p-0 bg-white border-end">
-        {% include 'components/SideBar.html' %}
-      </div>
+        <!-- Main Content -->
+        <div class="col p-0">
+          {% include 'components/Header.html' %}
 
-      <!-- Main Content -->
-      <div class="col p-0">
-        {% include 'components/Header.html' %}
-
-        <div class="container-fluid py-4">
-
-          <!-- Upload Section -->
-          <div class="bg-white p-4 rounded shadow mb-4">
-            <h4 class="mb-3"><i class="bi bi-upload me-2 text-primary"></i>Upload Student Lists</h4>
-            <p class="text-muted small mb-4">Upload CSV files for all departments having exams on the same day.</p>
-            <input type="file" class="form-control mb-3" accept=".csv" multiple>
-            <div class="alert alert-info small mb-0">
-              <i class="bi bi-info-circle me-2"></i>
-              File format: Roll Number, Reg No, Name, Department, Year
-            </div>
-          </div>
-
-          <!-- Room Selection -->
-          <div class="bg-white p-4 rounded shadow mb-4">
-            <h4 class="mb-3"><i class="bi bi-door-open me-2 text-success"></i>Available Rooms</h4>
-            <div class="row g-3">
-              <div class="col-md-4">
-                <input type="text" class="form-control" placeholder="Room Number">
+          <div class="container-fluid py-4">
+            <!-- Upload Section -->
+            <div class="bg-white p-4 rounded shadow mb-4">
+              <h4 class="mb-3">
+                <i class="bi bi-upload me-2 text-primary"></i>Upload Student
+                Lists
+              </h4>
+              <p class="text-muted small mb-4">
+                Upload CSV files for all departments having exams on the same
+                day.
+              </p>
+              <input
+                type="file"
+                class="form-control mb-3"
+                accept=".csv"
+                name="files"
+                multiple
+              />
+              <div class="alert alert-info small mb-0">
+                <i class="bi bi-info-circle me-2"></i>
+                File format: Roll Number, Reg No, Name, Department, Year
               </div>
-              <div class="col-md-4">
-                <input type="number" class="form-control" placeholder="Capacity">
-              </div>
-              <div class="col-md-4">
-                <button class="btn btn-outline-primary w-100"><i class="bi bi-plus-lg me-1"></i>Add Room</button>
-              </div>
             </div>
-            <div class="mt-3">
-              <span class="badge bg-primary me-2">Room A - 60 seats</span>
-              <span class="badge bg-primary me-2">Room B - 45 seats</span>
-            </div>
-          </div>
 
-          <!-- Assign Seats -->
-          <div class="bg-white p-4 rounded shadow mb-4 text-center">
-            <button class="btn btn-lg btn-primary px-5">
-              <i class="bi bi-lightning-charge me-2"></i>Assign Seats (Anti-Cheat Mode)
-            </button>
-            <p class="text-muted small mt-2">Students will be distributed randomly across rooms to reduce cheating.</p>
-          </div>
-
-          <!-- Preview Allocation -->
-          <div class="bg-white p-4 rounded shadow">
-            <h4 class="mb-3"><i class="bi bi-grid me-2 text-warning"></i>Seat Allocation Preview</h4>
-            <div class="row g-4">
-              <!-- Example Room -->
-              <div class="col-md-4">
-                <div class="border rounded p-3">
-                  <h6 class="fw-bold">Room A</h6>
-                  <small class="text-muted">Capacity: 60 | Assigned: 58</small>
-                  <hr>
-                  <div class="d-flex flex-wrap gap-1">
-                    <!-- Sample seat -->
-                    <span class="badge bg-success">CS001</span>
-                    <span class="badge bg-danger">ME102</span>
-                    <span class="badge bg-success">EE205</span>
-                    <!-- Repeat badges for each seat -->
-                  </div>
+            <!-- Room Selection -->
+            <div class="bg-white p-4 rounded shadow mb-4">
+              <h4 class="mb-3">
+                <i class="bi bi-door-open me-2 text-success"></i>Available Rooms
+              </h4>
+              <div class="row g-3">
+                <div class="col-md-4">
+                  <input
+                    type="text"
+                    class="form-control"
+                    placeholder="Room Number"
+                  />
+                </div>
+                <div class="col-md-4">
+                  <input
+                    type="number"
+                    class="form-control"
+                    placeholder="Capacity"
+                  />
+                </div>
+                <div class="col-md-4">
+                  <button class="btn btn-outline-primary w-100">
+                    <i class="bi bi-plus-lg me-1"></i>Add Room
+                  </button>
                 </div>
               </div>
-              <!-- More rooms... -->
+              <div class="mt-3">
+                <span class="badge bg-primary me-2">Room A - 60 seats</span>
+                <span class="badge bg-primary me-2">Room B - 45 seats</span>
+              </div>
+            </div>
+
+            <!-- Assign Seats -->
+            <div class="bg-white p-4 rounded shadow mb-4 text-center">
+              <button class="btn btn-lg btn-primary px-5">
+                <i class="bi bi-lightning-charge me-2"></i>Assign Seats
+                (Anti-Cheat Mode)
+              </button>
+              <p class="text-muted small mt-2">
+                Students will be distributed randomly across rooms to reduce
+                cheating.
+              </p>
+            </div>
+
+            <!-- Preview Allocation -->
+            <div class="bg-white p-4 rounded shadow">
+              <h4 class="mb-3">
+                <i class="bi bi-grid me-2 text-warning"></i>Seat Allocation
+                Preview
+              </h4>
+              <div class="row g-4">
+                <!-- Example Room -->
+                <div class="col-md-4">
+                  <div class="border rounded p-3">
+                    <h6 class="fw-bold">Room A</h6>
+                    <small class="text-muted"
+                      >Capacity: 60 | Assigned: 58</small
+                    >
+                    <hr />
+                    <div class="d-flex flex-wrap gap-1">
+                      <!-- Sample seat -->
+                      <span class="badge bg-success">CS001</span>
+                      <span class="badge bg-danger">ME102</span>
+                      <span class="badge bg-success">EE205</span>
+                      <!-- Repeat badges for each seat -->
+                    </div>
+                  </div>
+                </div>
+                <!-- More rooms... -->
+              </div>
             </div>
           </div>
-
         </div>
       </div>
-
     </div>
-  </div>
 
-  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
-</body>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+  </body>
 </html>
