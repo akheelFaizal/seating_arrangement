@@ -1,3 +1,4 @@
+from django.db.models import Q
 from django.shortcuts import render, redirect, get_object_or_404
 from . models import *
 from django.contrib import messages
@@ -6,6 +7,8 @@ import random
 from django.contrib.auth.hashers import make_password
 from django.contrib.auth.hashers import check_password
 from datetime import timedelta
+import csv
+from django.http import HttpResponse
 
 
 
@@ -110,10 +113,64 @@ def StudentExamDetail(request):
     
 #admin
 
+
 def StudentManagement(request):
     departments = Department.objects.all()
-    print(departments)
-    return render(request, 'admin/StudentManagement.html', {'departments':departments})
+
+    # Get filters from GET request
+    dept_filter = request.GET.get("department")
+    year_filter = request.GET.get("year")
+    search_query = request.GET.get("search")
+    export = request.GET.get("export", None)
+
+
+    # Start with all students
+    students = Student.objects.all()
+
+    # Apply filters
+    if dept_filter and dept_filter != "all":
+        students = students.filter(department__id=dept_filter)
+
+    if year_filter and year_filter != "all":
+        students = students.filter(year=year_filter)
+
+    if search_query:
+        students = students.filter(
+            Q(name__icontains=search_query) |
+            Q(roll_number__icontains=search_query)
+        )
+
+    if export == "csv":
+        response = HttpResponse(content_type="text/csv")
+        response["Content-Disposition"] = 'attachment; filename="students.csv"'
+
+        writer = csv.writer(response)
+        writer.writerow(["Roll No", "Name", "Department", "Year", "Seat Info"])
+
+        for student in students:
+            seat_info = ", ".join(
+                [f"{s.room.room_number} (Seat {s.seat_number})" for s in student.seating_set.all()]
+            ) or "Not Assigned"
+            writer.writerow([
+                student.roll_number,
+                student.name,
+                student.department.name,
+                student.year,
+                seat_info,
+            ])
+        return response
+
+    # Prefetch related seating to avoid N+1 queries
+    students = students.prefetch_related("seating_set__room")
+
+    return render(request, "admin/StudentManagement.html", {
+        "departments": departments,
+        "students": students,
+        "selected_dept": dept_filter,
+        "selected_year": year_filter,
+        "search_query": search_query,
+    })
+
   
 def SeatingArrangement(request):
     rooms = Room.objects.all()
@@ -271,3 +328,12 @@ def delete_exam(request, exam_id):
     exam.delete()
     messages.success(request, f"Exam '{exam_name}' deleted successfully!")
     return redirect("exam_schedule")
+
+
+def delete_student(request, student_id):
+    student = get_object_or_404(Student, id=student_id)
+    print(student)
+    student.delete()
+    messages.success(request, "Student deleted successfully ✅")
+    return redirect('student_management')  
+    

@@ -25,6 +25,7 @@ class Student(models.Model):
     name = models.CharField(max_length=100)
     course = models.ForeignKey(Course, on_delete=models.CASCADE)
     department = models.ForeignKey(Department, on_delete=models.CASCADE)
+    year = models.PositiveIntegerField(choices=[(1, "1st Year"), (2, "2nd Year"), (3, "3rd Year"), (4, "4th Year")], default=1)
 
     def __str__(self):
         return self.name

@@ -23,7 +23,7 @@
 
         <!-- Main Content -->
         <div class="col p-0">
-          {% include 'components/Header.html' %}
+          {% include 'components/Header.html' with title="Seating Arrangement" %}
 
           <div class="container-fluid py-4">
             <!-- Upload Section -->
@@ -140,14 +140,13 @@
                     </small>
                     <hr />
                     <div class="d-flex flex-wrap gap-1">
-                      {% for seat in room.seating_set.all %} {% cycle
-                      'bg-success' 'bg-danger' 'bg-warning' as seat_color silent
-                      %}
-                      <span class="badge {{ seat_color }}">
-                        {{ seat.student.roll_number }}
-                      </span>
+                      {% for seat in room.seating_set.all %}
+                        {% cycle 'bg-success' 'bg-danger' 'bg-warning' as seat_color silent %}
+                        <span class="badge {{ seat_color }}">
+                          {{ seat.student.roll_number }}
+                        </span>
                       {% empty %}
-                      <p class="text-muted small">No students assigned yet.</p>
+                        <p class="text-muted small">No students assigned yet.</p>
                       {% endfor %}
                     </div>
                   </div>
