@@ -120,6 +120,15 @@ def SeatingArrangement(request):
 def ExamSchedule(request):
     return render(request, 'admin/ExamSchedule.html')
 
+
+
+
+
+#invigilator 
+
+def teacheroverview(request):
+    return render(request, 'invigilator/teachersoverview.html')
+
   
   
 

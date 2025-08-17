@@ -1,0 +1,115 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Student Sidebar</title>
+    {% load static %}
+    <link href="{% static 'sidebar.css' %}" rel="stylesheet" />
+    <link href="{% static 'common.css' %}" rel="stylesheet" />
+    <link
+      href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css"
+      rel="stylesheet"
+    />
+  </head>
+  <body>
+<div
+  id="sidebar"
+  class="d-flex flex-column open w-100 h-100"
+  aria-label="Sidebar Navigation"
+>
+  <div class="p-4 d-flex flex-column flex-grow-1">
+    <div class="d-flex align-items-center mb-4">
+      <!-- SeatMaster Pro logo SVG -->
+      <svg
+        xmlns="http://www.w3.org/2000/svg"
+        viewBox="0 0 24 24"
+        fill="currentColor"
+        style="color: var(--yellow); width: 32px; height: 32px"
+        class="me-3"
+      >
+        <path d="M12 2L1 7l11 5 9-4.09V17h2V7L12 2z" />
+        <path d="M11 12v6h2v-6h-2z" />
+      </svg>
+      <h1 class="fs-4 fw-bold mb-0">SeatMaster Pro</h1>
+    </div>
+    <nav id="navButtons" class="d-flex flex-column gap-3" role="navigation">
+      <!-- Teacher Overview -->
+      <a
+        href="/teacher/"
+        type="button"
+        class="btn sidebar-btn text-start text-white d-flex align-items-center active"
+        data-id="overview"
+      >
+        <svg xmlns="http://www.w3.org/2000/svg" fill="currentColor" viewBox="0 0 24 24">
+          <rect x="3" y="12" width="4" height="8" />
+          <rect x="10" y="8" width="4" height="12" />
+          <rect x="17" y="4" width="4" height="16" />
+        </svg>
+        <span>Overview</span>
+      </a>
+
+      <!-- Room Details -->
+      <a
+        href="/teacher/room-details/"
+        type="button"
+        class="btn sidebar-btn text-start text-white d-flex align-items-center"
+        data-id="room-details"
+      >
+        <svg xmlns="http://www.w3.org/2000/svg" fill="currentColor" viewBox="0 0 24 24">
+          <rect x="3" y="7" width="18" height="14" rx="2" ry="2" />
+          <line x1="3" y1="7" x2="21" y2="7" />
+        </svg>
+        <span>Room Details</span>
+      </a>
+
+      <!-- Exam Notification -->
+      <a
+        href="/teacher/exam-notification/"
+        type="button"
+        class="btn sidebar-btn text-start text-white d-flex align-items-center"
+        data-id="exam-notification"
+      >
+        <svg xmlns="http://www.w3.org/2000/svg" fill="currentColor" viewBox="0 0 24 24">
+          <path d="M18 8a6 6 0 0 0-12 0c0 7-3 9-3 9h18s-3-2-3-9" />
+          <path d="M13.73 21a2 2 0 0 1-3.46 0" />
+        </svg>
+        <span>Exam Notification</span>
+      </a>
+
+      <!-- Profile -->
+      <a
+        href="/teacher/profile/"
+        type="button"
+        class="btn sidebar-btn text-start text-white d-flex align-items-center"
+        data-id="profile"
+      >
+        <svg xmlns="http://www.w3.org/2000/svg" fill="currentColor" viewBox="0 0 24 24">
+          <circle cx="12" cy="7" r="4"></circle>
+          <line x1="5.5" y1="21" x2="18.5" y2="21"></line>
+          <path d="M4 16c0-3.31 2.69-6 6-6h0c3.31 0 6 2.69 6 6" />
+        </svg>
+        <span>Profile</span>
+      </a>
+
+      <!-- Allotted Room Students Details -->
+      <a
+        href="/teacher/allotted-room-students/"
+        type="button"
+        class="btn sidebar-btn text-start text-white d-flex align-items-center"
+        data-id="allotted-room-students"
+      >
+        <svg xmlns="http://www.w3.org/2000/svg" fill="currentColor" viewBox="0 0 24 24">
+          <circle cx="6" cy="8" r="3"></circle>
+          <circle cx="18" cy="8" r="3"></circle>
+          <circle cx="12" cy="16" r="3"></circle>
+          <path d="M2,18c0-2.21,3.58-4,8-4s8,1.79,8,4" />
+        </svg>
+        <span>Allotted Room Students</span>
+      </a>
+    </nav>
+  </div>
+</div>
+ <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+  </body>
+</html>

@@ -34,6 +34,11 @@ urlpatterns = [
     path('adminhome', views.index),
     path('student-management/',views.StudentManagement),
     path('seating-arrangement/',views.SeatingArrangement),
-    path('exam/',views.ExamSchedule)
+    path('exam/',views.ExamSchedule),
+
+
+    #invigilator
+
+    path('invigilator/teacheroverview',views.teacheroverview)
 
 ]
