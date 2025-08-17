@@ -1,4 +1,5 @@
 from django.db import models
+from datetime import timedelta, datetime
 
 # Create your models here.
 
@@ -23,8 +24,8 @@ class Student(models.Model):
     roll_number = models.CharField(max_length=20, unique=True)
     name = models.CharField(max_length=100)
     course = models.ForeignKey(Course, on_delete=models.CASCADE)
-    password = models.CharField(max_length=128,default="testpassword")
     department = models.ForeignKey(Department, on_delete=models.CASCADE)
+    year = models.PositiveIntegerField(choices=[(1, "1st Year"), (2, "2nd Year"), (3, "3rd Year"), (4, "4th Year")], default=1)
 
     def __str__(self):
         return self.name
@@ -56,6 +57,7 @@ class Exam(models.Model):
 
     def __str__(self):
         return self.subject_name
+    
 
 #room info
 

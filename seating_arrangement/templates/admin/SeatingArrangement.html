@@ -1,97 +1,168 @@
 <!DOCTYPE html>
 <html lang="en">
-<head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Seat Allocation</title>
-  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
-  <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css" rel="stylesheet">
-</head>
-<body class="bg-light">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Seat Allocation</title>
+    <link
+      href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css"
+      rel="stylesheet"
+    />
+    <link
+      href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css"
+      rel="stylesheet"
+    />
+  </head>
+  <body class="bg-light">
+    <div class="container-fluid min-vh-100 d-flex flex-column">
+      <div class="row flex-grow-1">
+        <!-- Sidebar -->
+        <div class="col-lg-2 d-none d-lg-block p-0 bg-white border-end">
+          {% include 'components/SideBar.html' with statusSA="active" %}
+        </div>
 
-  
-  <div class="container-fluid min-vh-100 d-flex flex-column">
-    <div class="row flex-grow-1">
-      
-      <!-- Sidebar -->
-      <div class="col-lg-2 d-none d-lg-block p-0 bg-white border-end">
-        {% include 'components/SideBar.html' %}
-      </div>
+        <!-- Main Content -->
+        <div class="col p-0">
+          {% include 'components/Header.html' with title="Seating Arrangement" %}
 
-      <!-- Main Content -->
-      <div class="col p-0">
-        {% include 'components/Header.html' %}
-
-        <div class="container-fluid py-4">
-
-          <!-- Upload Section -->
-          <div class="bg-white p-4 rounded shadow mb-4">
-            <h4 class="mb-3"><i class="bi bi-upload me-2 text-primary"></i>Upload Student Lists</h4>
-            <p class="text-muted small mb-4">Upload CSV files for all departments having exams on the same day.</p>
-            <input type="file" class="form-control mb-3" accept=".csv" multiple>
-            <div class="alert alert-info small mb-0">
-              <i class="bi bi-info-circle me-2"></i>
-              File format: Roll Number, Reg No, Name, Department, Year
-            </div>
-          </div>
-
-          <!-- Room Selection -->
-          <div class="bg-white p-4 rounded shadow mb-4">
-            <h4 class="mb-3"><i class="bi bi-door-open me-2 text-success"></i>Available Rooms</h4>
-            <div class="row g-3">
-              <div class="col-md-4">
-                <input type="text" class="form-control" placeholder="Room Number">
+          <div class="container-fluid py-4">
+            <!-- Upload Section -->
+            <div class="bg-white p-4 rounded shadow mb-4">
+              <h4 class="mb-3">
+                <i class="bi bi-upload me-2 text-primary"></i>Upload Student
+                Lists
+              </h4>
+              <p class="text-muted small mb-4">
+                Upload CSV files for all departments having exams on the same
+                day.
+              </p>
+              <form
+                method="POST"
+                action="{% url 'upload_students' %}"
+                enctype="multipart/form-data"
+              >
+                {% csrf_token %}
+                <input
+                  type="file"
+                  class="form-control mb-3"
+                  accept=".csv"
+                  name="files"
+                  multiple
+                  required
+                />
+                <button class="btn btn-primary mt-2">
+                  <i class="bi bi-cloud-arrow-up me-2"></i>Upload Files
+                </button>
+              </form>
+              <div class="alert alert-info small mt-3 mb-0">
+                <i class="bi bi-info-circle me-2"></i>
+                File format: Roll Number, Reg No, Name, Department, Year, Course
               </div>
-              <div class="col-md-4">
-                <input type="number" class="form-control" placeholder="Capacity">
-              </div>
-              <div class="col-md-4">
-                <button class="btn btn-outline-primary w-100"><i class="bi bi-plus-lg me-1"></i>Add Room</button>
-              </div>
             </div>
-            <div class="mt-3">
-              <span class="badge bg-primary me-2">Room A - 60 seats</span>
-              <span class="badge bg-primary me-2">Room B - 45 seats</span>
-            </div>
-          </div>
 
-          <!-- Assign Seats -->
-          <div class="bg-white p-4 rounded shadow mb-4 text-center">
-            <button class="btn btn-lg btn-primary px-5">
-              <i class="bi bi-lightning-charge me-2"></i>Assign Seats (Anti-Cheat Mode)
-            </button>
-            <p class="text-muted small mt-2">Students will be distributed randomly across rooms to reduce cheating.</p>
-          </div>
-
-          <!-- Preview Allocation -->
-          <div class="bg-white p-4 rounded shadow">
-            <h4 class="mb-3"><i class="bi bi-grid me-2 text-warning"></i>Seat Allocation Preview</h4>
-            <div class="row g-4">
-              <!-- Example Room -->
-              <div class="col-md-4">
-                <div class="border rounded p-3">
-                  <h6 class="fw-bold">Room A</h6>
-                  <small class="text-muted">Capacity: 60 | Assigned: 58</small>
-                  <hr>
-                  <div class="d-flex flex-wrap gap-1">
-                    <!-- Sample seat -->
-                    <span class="badge bg-success">CS001</span>
-                    <span class="badge bg-danger">ME102</span>
-                    <span class="badge bg-success">EE205</span>
-                    <!-- Repeat badges for each seat -->
+            <!-- Room Selection -->
+            <div class="bg-white p-4 rounded shadow mb-4">
+              <h4 class="mb-3">
+                <i class="bi bi-door-open me-2 text-success"></i>Available Rooms
+              </h4>
+              <form method="POST" action="{% url 'add_room' %}">
+                {% csrf_token %}
+                <div class="row g-3">
+                  <div class="col-md-4">
+                    <input
+                      type="text"
+                      class="form-control"
+                      name="room_number"
+                      placeholder="Room Number"
+                      required
+                    />
+                  </div>
+                  <div class="col-md-4">
+                    <input
+                      type="number"
+                      class="form-control"
+                      name="capacity"
+                      placeholder="Capacity"
+                      required
+                    />
+                  </div>
+                  <div class="col-md-4">
+                    <button class="btn btn-outline-primary w-100">
+                      <i class="bi bi-plus-lg me-1"></i>Add Room
+                    </button>
                   </div>
                 </div>
+              </form>
+              <div class="mt-3">
+                {% for room in rooms %}
+                <span class="badge bg-primary me-2">
+                  {{ room.room_number }} - {{ room.capacity }} seats
+                </span>
+                {% empty %}
+                <p class="text-muted small">No rooms added yet.</p>
+                {% endfor %}
               </div>
-              <!-- More rooms... -->
+            </div>
+
+            <!-- Assign Seats -->
+            <div class="bg-white p-4 rounded shadow mb-4 text-center">
+              {% if exam %}
+              <form method="POST" action="{% url 'assign_seats' exam.id %}">
+                {% csrf_token %}
+                <button class="btn btn-lg btn-primary px-5">
+                  <i class="bi bi-lightning-charge me-2"></i>Assign Seats
+                  (Anti-Cheat Mode)
+                </button>
+              </form>
+              {% else %}
+              <p class="text-muted">⚠ No active exam found.</p>
+              {% endif %}
+              <p class="text-muted small mt-2">
+                Students will be distributed randomly across rooms to reduce
+                cheating.
+              </p>
+            </div>
+
+            <!-- Preview Allocation -->
+            <div class="bg-white p-4 rounded shadow">
+              <h4 class="mb-3">
+                <i class="bi bi-grid me-2 text-warning"></i>Seat Allocation
+                Preview
+              </h4>
+              <div class="row g-4">
+                {% for room in rooms %}
+                <div class="col-md-4">
+                  <div class="border rounded p-3">
+                    <h6 class="fw-bold">{{ room.room_number }}</h6>
+                    <small class="text-muted">
+                      Capacity: {{ room.capacity }} | Assigned: {{
+                      room.seating_set.count }}
+                    </small>
+                    <hr />
+                    <div class="d-flex flex-wrap gap-1">
+                      {% for seat in room.seating_set.all %}
+                        {% cycle 'bg-success' 'bg-danger' 'bg-warning' as seat_color silent %}
+                        <span class="badge {{ seat_color }}">
+                          {{ seat.student.roll_number }}
+                        </span>
+                      {% empty %}
+                        <p class="text-muted small">No students assigned yet.</p>
+                      {% endfor %}
+                    </div>
+                  </div>
+                </div>
+                {% empty %}
+                <p class="text-muted">No seat allocations yet.</p>
+                {% endfor %}
+              </div>
             </div>
           </div>
-
         </div>
       </div>
-
     </div>
-  </div>
-
-  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
-</body>
+    <!-- Toast container -->
+    {% include 'components/Toast.html' %}
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="../../static/toast.js"></script>
+  </body>
 </html>
