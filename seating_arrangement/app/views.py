@@ -229,30 +229,42 @@ def add_room(request):
 
 def assign_seats(request, exam_id):
     exam = Exam.objects.get(id=exam_id)
-    
     Seating.objects.filter(exam=exam).delete()
 
     students = list(Student.objects.all())
     rooms = list(Room.objects.all())
-    
-    random.shuffle(students)
-    
-    room_indices = {room.id: 0 for room in rooms}
-    
-    last_course_in_room = {room.id: None for room in rooms}
-    
+
+    # Group students by class (course+year+section)
+    from collections import defaultdict
+    class_groups = defaultdict(list)
     for student in students:
-        available_rooms = [room for room in rooms if room_indices[room.id] < room.capacity]
-        if not available_rooms:
-            break  
-        
-        filtered_rooms = [room for room in available_rooms 
-                          if last_course_in_room[room.id] != student.course]
-        if filtered_rooms:
-            chosen_room = random.choice(filtered_rooms)
-        else:
-            chosen_room = random.choice(available_rooms)
-        
+        class_groups[(student.course, student.year, student.section)].append(student)
+
+    # Shuffle inside each class group
+    for group in class_groups.values():
+        random.shuffle(group)
+
+    # Flatten in round-robin order
+    distributed_students = []
+    while any(class_groups.values()):
+        for key in list(class_groups.keys()):
+            if class_groups[key]:
+                distributed_students.append(class_groups[key].pop())
+
+    # Now assign seats room by room
+    room_indices = {room.id: 0 for room in rooms}
+    student_index = 0
+
+    for student in distributed_students:
+        # Find next available room
+        chosen_room = None
+        for room in rooms:
+            if room_indices[room.id] < room.capacity:
+                chosen_room = room
+                break
+        if not chosen_room:
+            break  # no seats left
+
         seat_number = room_indices[chosen_room.id] + 1
         Seating.objects.create(
             student=student,
@@ -260,14 +272,12 @@ def assign_seats(request, exam_id):
             room=chosen_room,
             seat_number=seat_number
         )
-        
         room_indices[chosen_room.id] += 1
-        last_course_in_room[chosen_room.id] = student.course
+        student_index += 1
 
-    messages.success(request, "Seats assigned successfully with anti-cheat logic.")
+    messages.success(request, "Seats assigned successfully with strict anti-cheat logic.")
     return redirect("seating_arrangement")
 
-  
   
 
 def add_exam(request):
