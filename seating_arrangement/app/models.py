@@ -1,5 +1,6 @@
 from django.db import models
 from datetime import timedelta, datetime
+from django.core.validators import MinValueValidator
 
 # Create your models here.
 
@@ -65,7 +66,20 @@ class Room(models.Model):
     room_number = models.CharField(max_length=20, unique=True)
     capacity = models.PositiveIntegerField()
     supervisor = models.ForeignKey('Invigilator', on_delete=models.SET_NULL, null=True, blank=True)
+    STATUS_CHOICES = [
+        ('active', 'Active'),
+        ('inactive', 'Inactive'),
+    ]
 
+    status = models.CharField(
+        max_length=10,
+        choices=STATUS_CHOICES,
+        default='active'
+    )
+    bench_capacity = models.IntegerField(default=3)
+    rows = models.PositiveIntegerField(default=5, validators=[MinValueValidator(1)])
+    columns = models.PositiveIntegerField(default=2, validators=[MinValueValidator(1)])
+    
     def __str__(self):
         return self.room_number
 

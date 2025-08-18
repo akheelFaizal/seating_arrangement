@@ -1,3 +1,4 @@
+from collections import defaultdict
 from django.db.models import Q
 from django.shortcuts import render, redirect, get_object_or_404
 from . models import *
@@ -227,45 +228,80 @@ def add_room(request):
     return redirect("seating_arrangement")
 
 
+
+
 def assign_seats(request, exam_id):
     exam = Exam.objects.get(id=exam_id)
     Seating.objects.filter(exam=exam).delete()
 
-    students = list(Student.objects.all())
-    rooms = list(Room.objects.all())
+    # students uploaded by admin
+    students = list(Student.objects.all().order_by('roll_number'))
+    # Active rooms only
+    rooms = list(Room.objects.filter(status='active'))
+    if not rooms:
+        messages.error(request, "No active rooms available.")
+        return redirect("seating_arrangement")
 
-    # Group students by class (course+year+section)
-    from collections import defaultdict
+    total_capacity = sum(room.capacity for room in rooms)
+    if len(students) > total_capacity:
+        messages.error(request, "Not enough seats for all students.")
+        return redirect("seating_arrangement")
+
+    # Group students by (course, year)
     class_groups = defaultdict(list)
     for student in students:
-        class_groups[(student.course, student.year, student.section)].append(student)
+        class_groups[(student.course, student.year)].append(student)
 
-    # Shuffle inside each class group
+    # Sort each group by roll number
     for group in class_groups.values():
-        random.shuffle(group)
+        group.sort(key=lambda s: s.roll_number)
 
-    # Flatten in round-robin order
+    # Round-robin flatten across class groups
     distributed_students = []
     while any(class_groups.values()):
         for key in list(class_groups.keys()):
             if class_groups[key]:
-                distributed_students.append(class_groups[key].pop())
+                distributed_students.append(class_groups[key].pop(0))
 
-    # Now assign seats room by room
+    # Room filling logic with alternate seat skipping
     room_indices = {room.id: 0 for room in rooms}
-    student_index = 0
+    room_caps = {room.id: room.capacity for room in rooms}
 
+    # Determine approximate even distribution
+    base_fill = len(students) // len(rooms)
+    extra_seats = len(students) % len(rooms)
+
+    student_index = 0
     for student in distributed_students:
-        # Find next available room
+        # Pick a room that has seats under the allowed variation
         chosen_room = None
+        random.shuffle(rooms)  # randomize room selection among active rooms
         for room in rooms:
-            if room_indices[room.id] < room.capacity:
+            # Current room fill
+            fill = room_indices[room.id]
+            max_allowed = base_fill + (1 if extra_seats > 0 else 0)
+            if fill < max_allowed:
                 chosen_room = room
                 break
         if not chosen_room:
-            break  # no seats left
+            # fallback: any room with remaining capacity
+            for room in rooms:
+                if room_indices[room.id] < room.capacity:
+                    chosen_room = room
+                    break
 
+        if not chosen_room:
+            messages.error(request, "Seating assignment failed due to room constraints.")
+            return redirect("seating_arrangement")
+
+        # Alternate-seat logic (skip one seat)
         seat_number = room_indices[chosen_room.id] + 1
+        if seat_number % (chosen_room.bench_capacity) == 0:
+            seat_number += 1
+            if seat_number > chosen_room.capacity:
+                # move to next room if exceeded
+                continue
+
         Seating.objects.create(
             student=student,
             exam=exam,
@@ -275,10 +311,10 @@ def assign_seats(request, exam_id):
         room_indices[chosen_room.id] += 1
         student_index += 1
 
+    # Optionally: generate a visual map here for admin (can be implemented in template)
     messages.success(request, "Seats assigned successfully with strict anti-cheat logic.")
     return redirect("seating_arrangement")
 
-  
 
 def add_exam(request):
     if request.method == "POST":
@@ -347,3 +383,40 @@ def delete_student(request, student_id):
     messages.success(request, "Student deleted successfully ✅")
     return redirect('student_management')  
     
+def seating_map_detail(request, room_id):
+    room = Room.objects.get(id=room_id)
+    seats = list(Seating.objects.filter(room=room).order_by('seat_number'))
+
+    benches = []
+    bench_capacity = 2  # 2 students per bench
+
+    seat_index = 0
+    total_seats = len(seats)
+    
+    # Generate layout row by row, column by column
+    for r in range(room.rows):
+        row_benches = []
+        for c in range(room.columns):
+            bench = []
+            for b in range(bench_capacity):
+                if seat_index < total_seats:
+                    student = seats[seat_index].student
+                    bench.append({
+                        'name': student.name,
+                        'roll_number': student.roll_number,
+                        'course': student.course,
+                        'department': student.department,
+                        'year': student.year
+                    })
+                    seat_index += 1
+                else:
+                    bench.append(None)  # empty seat
+            row_benches.append(bench)
+        benches.append(row_benches)
+
+    context = {
+        'room': room,
+        'benches': benches,  # benches[row][column] = list of 2 students or None
+        'bench_capacity': bench_capacity
+    }
+    return render(request, 'admin/seating_map_detail.html', context)
