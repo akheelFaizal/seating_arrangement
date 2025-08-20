@@ -1,3 +1,5 @@
+from django.db.models import Prefetch
+from collections import defaultdict
 from django.db.models import Q
 from django.shortcuts import render, redirect, get_object_or_404
 from . models import *
@@ -9,6 +11,7 @@ from django.contrib.auth.hashers import check_password
 from datetime import timedelta
 import csv
 from django.http import HttpResponse
+from django.utils.timezone import now
 
 
 
@@ -172,17 +175,44 @@ def StudentManagement(request):
     })
 
   
-def SeatingArrangement(request):
-    rooms = Room.objects.all()
-    exams = Exam.objects.all().first()
-    print(rooms)
-    return render(request, 'admin/SeatingArrangement.html', {'rooms': rooms, 'exam':exams})
 
-  
+def SeatingArrangement(request):
+    # Fetch all exams with related session info
+    exams = Exam.objects.select_related('department', 'session').all().order_by('session__date')
+
+    rooms = Room.objects.all()
+    print(rooms)
+    # Group exams by session date
+    exams_by_date = defaultdict(list)
+    for exam in exams:
+        exams_by_date[exam.session.date].append(exam)
+
+    # Convert to a sorted list of tuples (date, [exams])
+    sorted_exams_by_date = sorted(exams_by_date.items())
+
+    
+    return render(request, 'admin/SeatingArrangement.html', {'exams_by_date': sorted_exams_by_date, 'rooms':rooms})
+
+
 def ExamSchedule(request):
-    exams = Exam.objects.all().order_by("date", "time")
-    departments = Department.objects.all() 
-    return render(request, 'admin/ExamSchedule.html', {'exams':exams, 'departments':departments})
+    departments = Department.objects.all()
+    sessions = ExamSession.objects.all()  # Ensure sessions exist
+    exams = Exam.objects.all().select_related('session', 'department')  # Efficient queries
+
+    # Group exams by department
+    dept_exams = defaultdict(list)
+    for exam in exams:
+        dept_exams[exam.department].append(exam)
+
+    # Convert defaultdict to normal dict
+    dept_exams = dict(dept_exams)
+
+    context = {
+        'departments': departments,
+        'sessions': sessions,
+        'dept_exams': dept_exams
+    }
+    return render(request, 'admin/ExamSchedule.html', context)
 
 
 # functionalities   
@@ -216,57 +246,107 @@ def upload_students(request):
 def add_room(request):
     if request.method == "POST":
         room_number = request.POST.get("room_number")
-        capacity = request.POST.get("capacity")
-        supervisor_id = request.POST.get("supervisor")
-        supervisor = None
-        if supervisor_id:
-            supervisor = Invigilator.objects.get(id=supervisor_id)
-        Room.objects.create(room_number=room_number, capacity=int(capacity), supervisor=supervisor)
+        rows = request.POST.get('rows')
+        cols = request.POST.get('columns')
+        capacity = int(rows) * int(cols) * 2
+        Room.objects.create(room_number=room_number, capacity=capacity, rows=rows, columns=cols)
         messages.success(request, f"Room {room_number} added successfully!")   
     
     return redirect("seating_arrangement")
 
 
-def assign_seats(request, exam_id):
-    exam = Exam.objects.get(id=exam_id)
-    
-    Seating.objects.filter(exam=exam).delete()
+def assign_seats_by_date(request):
+    if request.method == "POST":
+        date = request.POST.get('date')
+        exams = Exam.objects.filter(session__date=date)
+        rooms = list(Room.objects.filter(status='active'))
 
-    students = list(Student.objects.all())
-    rooms = list(Room.objects.all())
-    
-    random.shuffle(students)
-    
-    room_indices = {room.id: 0 for room in rooms}
-    
-    last_course_in_room = {room.id: None for room in rooms}
-    
-    for student in students:
-        available_rooms = [room for room in rooms if room_indices[room.id] < room.capacity]
-        if not available_rooms:
-            break  
-        
-        filtered_rooms = [room for room in available_rooms 
-                          if last_course_in_room[room.id] != student.course]
-        if filtered_rooms:
-            chosen_room = random.choice(filtered_rooms)
-        else:
-            chosen_room = random.choice(available_rooms)
-        
-        seat_number = room_indices[chosen_room.id] + 1
-        Seating.objects.create(
-            student=student,
-            exam=exam,
-            room=chosen_room,
-            seat_number=seat_number
-        )
-        
-        room_indices[chosen_room.id] += 1
-        last_course_in_room[chosen_room.id] = student.course
+        if not exams:
+            messages.error(request, f"No exams scheduled on {date}.")
+            return redirect('seating_arrangement')
+        if not rooms:
+            messages.error(request, "No active rooms available.")
+            return redirect('seating_arrangement')
 
-    messages.success(request, "Seats assigned successfully with anti-cheat logic.")
-    return redirect("seating_arrangement")
+        for exam in exams:
+            # Clear old seating for this exam
+            Seating.objects.filter(exam=exam).delete()
 
+            # Fetch students only for this exam’s department
+            students = list(
+                Student.objects.filter(
+                    course__department=exam.department
+                ).order_by('roll_number')
+            )
+
+            print(f"Exam: {exam.subject_name}, Dept: {exam.department}, Students: {len(students)}")
+
+            # Group students by (course, dept, year)
+            class_groups = defaultdict(list)
+            for student in students:
+                class_groups[(student.course, student.department, student.year)].append(student)
+
+            # Round-robin distribution (interleave groups)
+            distributed_students = []
+            while any(class_groups.values()):
+                for key in list(class_groups.keys()):
+                    if class_groups[key]:
+                        distributed_students.append(class_groups[key].pop(0))
+
+            # Shuffle once for randomness
+            random.shuffle(distributed_students)
+
+            # Seat assignment
+            student_index = 0
+            for room in rooms:
+                bench = []
+                for seat_number in range(1, room.capacity + 1):
+                    if student_index >= len(distributed_students):
+                        break
+
+                    student = distributed_students[student_index]
+
+                    # Prevent consecutive same group on same bench
+                    if bench and (
+                        bench[-1].course == student.course and
+                        bench[-1].department == student.department and
+                        bench[-1].year == student.year
+                    ):
+                        swap_index = student_index + 1
+                        while swap_index < len(distributed_students):
+                            next_student = distributed_students[swap_index]
+                            if (
+                                bench[-1].course != next_student.course or
+                                bench[-1].department != next_student.department or
+                                bench[-1].year != next_student.year
+                            ):
+                                # Swap them
+                                distributed_students[student_index], distributed_students[swap_index] = \
+                                    distributed_students[swap_index], distributed_students[student_index]
+                                student = distributed_students[student_index]
+                                break
+                            swap_index += 1
+                        # if no swap found, assign anyway
+
+                    # Create seating record
+                    Seating.objects.create(
+                        student=student,
+                        exam=exam,
+                        room=room,
+                        seat_number=seat_number
+                    )
+
+                    bench.append(student)
+                    if len(bench) == room.bench_capacity:
+                        bench = []  # reset for new bench
+
+                    student_index += 1
+
+        messages.success(request, f"Seats assigned for all exams on {date}")
+    return redirect('seating_arrangement')
+
+
+<<<<<<< HEAD
 
 
 
@@ -278,6 +358,8 @@ def teacheroverview(request):
 
   
   
+=======
+>>>>>>> 433179d6439f24382fc1db689127f88a7426a0b4
 
 def add_exam(request):
     if request.method == "POST":
@@ -346,3 +428,59 @@ def delete_student(request, student_id):
     messages.success(request, "Student deleted successfully ✅")
     return redirect('student_management')  
     
+def seating_map_detail(request, room_id):
+    room = Room.objects.get(id=room_id)
+    seats = list(Seating.objects.filter(room=room).order_by('seat_number'))
+
+    benches = []
+    bench_capacity = 2  # 2 students per bench
+
+    seat_index = 0
+    total_seats = len(seats)
+    
+    # Generate layout row by row, column by column
+    for r in range(room.rows):
+        row_benches = []
+        for c in range(room.columns):
+            bench = []
+            for b in range(bench_capacity):
+                if seat_index < total_seats:
+                    student = seats[seat_index].student
+                    bench.append({
+                        'name': student.name,
+                        'roll_number': student.roll_number,
+                        'course': student.course,
+                        'department': student.department,
+                        'year': student.year
+                    })
+                    seat_index += 1
+                else:
+                    bench.append(None)  # empty seat
+            row_benches.append(bench)
+        benches.append(row_benches)
+
+    context = {
+        'room': room,
+        'benches': benches,  # benches[row][column] = list of 2 students or None
+        'bench_capacity': bench_capacity
+    }
+    return render(request, 'admin/seating_map_detail.html', context)
+
+
+def remove_all_assignments(request):
+    if request.method == "POST":
+        date_str = request.POST.get('date')
+        try:
+            exam_date = datetime.strptime(date_str, "%Y-%m-%d").date()
+        except (ValueError, TypeError):
+            messages.error(request, "Invalid date format.")
+            return redirect('seating_arrangement')
+
+        exams = Exam.objects.filter(session__date=exam_date)
+        if exams.exists():
+            Seating.objects.filter(exam__in=exams).delete()
+            messages.success(request, f"All seat assignments removed for {exam_date}")
+        else:
+            messages.warning(request, f"No exams found on {exam_date}")
+
+    return redirect('seating_arrangement')

@@ -40,8 +40,8 @@ class InvigilatorAdmin(admin.ModelAdmin):
 
 @admin.register(Exam)
 class ExamAdmin(admin.ModelAdmin):
-    list_display = ['subject_code', 'subject_name', 'department', 'date', 'time', 'duration']
-    list_filter = ['department', 'date']
+    list_display = ['subject_code', 'subject_name', 'department']
+    list_filter = ['department']
     search_fields = ['subject_name', 'subject_code']
 
 
@@ -61,3 +61,5 @@ class SeatingAdmin(admin.ModelAdmin):
     list_display = ['id', 'student', 'exam', 'room', 'seat_number']
     list_filter = ['exam', 'room']
     search_fields = ['student__name', 'student__roll_number', 'exam__subject_name']
+
+admin.site.register(ExamSession)
