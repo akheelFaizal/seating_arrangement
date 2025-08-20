@@ -345,21 +345,10 @@ def assign_seats_by_date(request):
         messages.success(request, f"Seats assigned for all exams on {date}")
     return redirect('seating_arrangement')
 
-
-<<<<<<< HEAD
-
-
-
-
 #invigilator 
 
 def teacheroverview(request):
     return render(request, 'invigilator/teachersoverview.html')
-
-  
-  
-=======
->>>>>>> 433179d6439f24382fc1db689127f88a7426a0b4
 
 def add_exam(request):
     if request.method == "POST":

@@ -37,14 +37,12 @@ urlpatterns = [
     path('delete-exam/<int:exam_id>/', views.delete_exam, name='delete_exam'),
     # path('students/<int:student_id>/edit/', views.edit_student, name='edit_student'),
     path('students/<int:student_id>/delete/', views.delete_student, name='delete_student'),
-<<<<<<< HEAD
-=======
+
     path('room/<int:room_id>/map/', views.seating_map_detail, name='seating_map_detail'),
     path('seating/assign_by_date/', views.assign_seats_by_date, name='assign_seats_by_date'),
     path('seating/remove_all/', views.remove_all_assignments, name='remove_all_assignments'),
 
-    
->>>>>>> 433179d6439f24382fc1db689127f88a7426a0b4
+
 
 ]
 
