@@ -21,12 +21,15 @@ urlpatterns = [
     # admin functionalities
     path('upload_students/', views.upload_students, name='upload_students'),
     path('add_room/', views.add_room, name='add_room'),
-    path('assign_seats/<int:exam_id>/', views.assign_seats, name='assign_seats'),
     path("add-exam/", views.add_exam, name="add_exam"),
     path('edit-exam/<int:exam_id>/', views.edit_exam, name='edit_exam'),
     path('delete-exam/<int:exam_id>/', views.delete_exam, name='delete_exam'),
     # path('students/<int:student_id>/edit/', views.edit_student, name='edit_student'),
     path('students/<int:student_id>/delete/', views.delete_student, name='delete_student'),
     path('room/<int:room_id>/map/', views.seating_map_detail, name='seating_map_detail'),
+    path('seating/assign_by_date/', views.assign_seats_by_date, name='assign_seats_by_date'),
+    path('seating/remove_all/', views.remove_all_assignments, name='remove_all_assignments'),
+
+    
 
 ]
