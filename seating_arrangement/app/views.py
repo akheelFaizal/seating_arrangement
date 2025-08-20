@@ -194,11 +194,25 @@ def SeatingArrangement(request):
     return render(request, 'admin/SeatingArrangement.html', {'exams_by_date': sorted_exams_by_date, 'rooms':rooms})
 
 
-  
 def ExamSchedule(request):
-    exams = Exam.objects.all().order_by("date", "time")
-    departments = Department.objects.all() 
-    return render(request, 'admin/ExamSchedule.html', {'exams':exams, 'departments':departments})
+    departments = Department.objects.all()
+    sessions = ExamSession.objects.all()  # Ensure sessions exist
+    exams = Exam.objects.all().select_related('session', 'department')  # Efficient queries
+
+    # Group exams by department
+    dept_exams = defaultdict(list)
+    for exam in exams:
+        dept_exams[exam.department].append(exam)
+
+    # Convert defaultdict to normal dict
+    dept_exams = dict(dept_exams)
+
+    context = {
+        'departments': departments,
+        'sessions': sessions,
+        'dept_exams': dept_exams
+    }
+    return render(request, 'admin/ExamSchedule.html', context)
 
 
 # functionalities   
