@@ -17,6 +17,9 @@ urlpatterns = [
     path('student-management/', views.StudentManagement, name='student_management'),
     path('seating-arrangement/', views.SeatingArrangement, name='seating_arrangement'),
     path('exam/', views.ExamSchedule, name='exam_schedule'),
+    path('room-management/', views.RoomManagement, name='room_management'),
+    path('news-management/', views.NewsManagement, name='news_management'),
+
     
     # admin functionalities
     path('upload_students/', views.upload_students, name='upload_students'),

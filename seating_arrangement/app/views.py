@@ -490,3 +490,9 @@ def remove_all_assignments(request):
             messages.warning(request, f"No exams found on {exam_date}")
 
     return redirect('seating_arrangement')
+
+
+def RoomManagement(request):
+    return render(request, 'admin/RoomManagement.html')
+def NewsManagement(request):
+    return render(request, 'admin/Updates.html')
