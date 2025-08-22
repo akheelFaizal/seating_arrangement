@@ -492,7 +492,62 @@ def remove_all_assignments(request):
     return redirect('seating_arrangement')
 
 
-def RoomManagement(request):
-    return render(request, 'admin/RoomManagement.html')
+from datetime import date
+
+
+def room_management(request):
+    # Handle Add Room
+    if request.method == "POST":
+        room_number = request.POST.get("room_number")
+        rows = int(request.POST.get("rows", 0))
+        columns = int(request.POST.get("columns", 0))
+        capacity = rows * columns
+        Room.objects.create(
+            room_number=room_number,
+            rows=rows,
+            columns=columns,
+            capacity=capacity
+        )
+        return redirect("room_management")
+
+    # Get all rooms
+    rooms = Room.objects.all().order_by("room_number")
+
+    # Get selected date from GET
+    selected_date = request.GET.get("date")
+    if not selected_date:
+        selected_date = date.today()
+
+    # Attach seating queryset to each room
+    for room in rooms:
+        room.seatings_for_date = Seating.objects.filter(room=room, exam__session__date=selected_date)
+
+    context = {
+        "rooms": rooms,
+        "today": date.today(),
+        "selected_date": selected_date
+    }
+    return render(request, "admin/RoomManagement.html", context)
+
+def room_edit(request, pk):
+    room = get_object_or_404(Room, pk=pk)
+
+    if request.method == "POST":
+        room.room_number = request.POST.get("room_number")
+        room.rows = int(request.POST.get("rows", 0))
+        room.columns = int(request.POST.get("columns", 0))
+        room.capacity = room.rows * room.columns
+        room.save()
+        return redirect("room_management")
+
+    context = {"room": room}
+    return render(request, "admin/RoomManagement.html", context)
+
+
+def room_delete(request, pk):
+    room = get_object_or_404(Room, pk=pk)
+    room.delete()
+    return redirect("room_management")
+
 def NewsManagement(request):
     return render(request, 'admin/Updates.html')

@@ -17,7 +17,7 @@ urlpatterns = [
     path('student-management/', views.StudentManagement, name='student_management'),
     path('seating-arrangement/', views.SeatingArrangement, name='seating_arrangement'),
     path('exam/', views.ExamSchedule, name='exam_schedule'),
-    path('room-management/', views.RoomManagement, name='room_management'),
+    path('room-management/', views.room_management, name='room_management'),
     path('news-management/', views.NewsManagement, name='news_management'),
 
     
@@ -32,7 +32,8 @@ urlpatterns = [
     path('room/<int:room_id>/map/', views.seating_map_detail, name='seating_map_detail'),
     path('seating/assign_by_date/', views.assign_seats_by_date, name='assign_seats_by_date'),
     path('seating/remove_all/', views.remove_all_assignments, name='remove_all_assignments'),
-
-    
+    path("rooms/", views.room_management, name="room_management"),
+    path("rooms/edit/<int:pk>/", views.room_edit, name="room_edit"),
+    path("rooms/delete/<int:pk>/", views.room_delete, name="room_delete"),
 
 ]
