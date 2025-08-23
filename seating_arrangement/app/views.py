@@ -174,25 +174,36 @@ def StudentManagement(request):
         "search_query": search_query,
     })
 
-  
+
 
 def SeatingArrangement(request):
     # Fetch all exams with related session info
     exams = Exam.objects.select_related('department', 'session').all().order_by('session__date')
 
-    rooms = Room.objects.all()
-    print(rooms)
+    # Fetch all rooms
+    rooms = Room.objects.prefetch_related('seating_set__exam__session', 'seating_set__student').all()
+
     # Group exams by session date
     exams_by_date = defaultdict(list)
     for exam in exams:
         exams_by_date[exam.session.date].append(exam)
-
-    # Convert to a sorted list of tuples (date, [exams])
     sorted_exams_by_date = sorted(exams_by_date.items())
 
-    
-    return render(request, 'admin/SeatingArrangement.html', {'exams_by_date': sorted_exams_by_date, 'rooms':rooms})
+    # Group room seating by date for JS filter
+    rooms_by_date = defaultdict(list)
+    for room in rooms:
+        # Check each seat in the room
+        seat_dates = set()
+        for seat in room.seating_set.all():
+            seat_dates.add(seat.exam.session.date)
+        for date in seat_dates:
+            rooms_by_date[date].append(room)
 
+    return render(request, 'admin/SeatingArrangement.html', {
+        'exams_by_date': sorted_exams_by_date,
+        'rooms': rooms,
+        'rooms_by_date': rooms_by_date,  # optional, for server-side filtering if needed
+    })
 
 def ExamSchedule(request):
     departments = Department.objects.all()
@@ -347,60 +358,70 @@ def assign_seats_by_date(request):
 
 #invigilator 
 
+
 def teacheroverview(request):
     return render(request, 'invigilator/teachersoverview.html')
 
+
 def add_exam(request):
+    departments = Department.objects.all()
+    sessions = ExamSession.objects.all()
+
     if request.method == "POST":
         subject_code = request.POST.get("subject_code")
         subject_name = request.POST.get("subject_name")
         department_id = request.POST.get("department")
-        date = request.POST.get("date")
-        time = request.POST.get("time")
-        duration_str = request.POST.get("duration")  # e.g. "02:00:00"
-
-        # Convert duration string ("HH:MM:SS") to timedelta
-        try:
-            hours, minutes, seconds = map(int, duration_str.split(":"))
-            duration = timedelta(hours=hours, minutes=minutes, seconds=seconds)
-        except ValueError:
-            messages.error(request, "Invalid duration format. Please use HH:MM:SS.")
-            return redirect("exam_schedule")
+        session_id = request.POST.get("session")
 
         department = Department.objects.get(id=department_id)
+        session = ExamSession.objects.get(id=session_id)
 
         Exam.objects.create(
             subject_code=subject_code,
             subject_name=subject_name,
             department=department,
-            date=date,
-            time=time,
-            duration=duration
+            session=session
         )
 
         messages.success(request, f"Exam '{subject_name}' added successfully!")
         return redirect("exam_schedule")
 
-    return redirect("exam_schedule")
+    return render(request, "add_exam.html", {
+        "departments": departments,
+        "sessions": sessions
+    })
+
+
 
 def edit_exam(request, exam_id):
     exam = get_object_or_404(Exam, id=exam_id)
     departments = Department.objects.all()
+    sessions = ExamSession.objects.all()  # for session dropdown
 
     if request.method == "POST":
         exam.subject_code = request.POST.get("subject_code")
         exam.subject_name = request.POST.get("subject_name")
+
+        # Update department
         dept_id = request.POST.get("department")
-        exam.department = Department.objects.get(id=dept_id)
-        exam.date = request.POST.get("date")
-        exam.time = request.POST.get("time")
-        h, m, s = map(int, request.POST.get("duration").split(":"))
-        exam.duration = timedelta(hours=h, minutes=m, seconds=s)
+        if dept_id:
+            exam.department = Department.objects.get(id=dept_id)
+
+        # Update session
+        session_id = request.POST.get("session")
+        if session_id:
+            exam.session = ExamSession.objects.get(id=session_id)
+
         exam.save()
         messages.success(request, f"Exam '{exam.subject_name}' updated successfully!")
         return redirect("exam_schedule")
-    return redirect("exam_schedule")
 
+    context = {
+        "exam": exam,
+        "departments": departments,
+        "sessions": sessions,
+    }
+    return render(request, "admin/edit_exam.html", context)
 
 def delete_exam(request, exam_id):
     exam = get_object_or_404(Exam, id=exam_id)
@@ -465,11 +486,74 @@ def remove_all_assignments(request):
             messages.error(request, "Invalid date format.")
             return redirect('seating_arrangement')
 
+        # Get all exams for the selected date
         exams = Exam.objects.filter(session__date=exam_date)
         if exams.exists():
+            # Delete all seat assignments for these exams
             Seating.objects.filter(exam__in=exams).delete()
             messages.success(request, f"All seat assignments removed for {exam_date}")
         else:
             messages.warning(request, f"No exams found on {exam_date}")
 
     return redirect('seating_arrangement')
+
+
+from datetime import date
+
+
+def room_management(request):
+    # Handle Add Room
+    if request.method == "POST":
+        room_number = request.POST.get("room_number")
+        rows = int(request.POST.get("rows", 0))
+        columns = int(request.POST.get("columns", 0))
+        capacity = rows * columns
+        Room.objects.create(
+            room_number=room_number,
+            rows=rows,
+            columns=columns,
+            capacity=capacity
+        )
+        return redirect("room_management")
+
+    # Get all rooms
+    rooms = Room.objects.all().order_by("room_number")
+
+    # Get selected date from GET
+    selected_date = request.GET.get("date")
+    if not selected_date:
+        selected_date = date.today()
+
+    # Attach seating queryset to each room
+    for room in rooms:
+        room.seatings_for_date = Seating.objects.filter(room=room, exam__session__date=selected_date)
+
+    context = {
+        "rooms": rooms,
+        "today": date.today(),
+        "selected_date": selected_date
+    }
+    return render(request, "admin/RoomManagement.html", context)
+
+def room_edit(request, pk):
+    room = get_object_or_404(Room, pk=pk)
+
+    if request.method == "POST":
+        room.room_number = request.POST.get("room_number")
+        room.rows = int(request.POST.get("rows", 0))
+        room.columns = int(request.POST.get("columns", 0))
+        room.capacity = room.rows * room.columns
+        room.save()
+        return redirect("room_management")
+
+    context = {"room": room}
+    return render(request, "admin/RoomManagement.html", context)
+
+
+def room_delete(request, pk):
+    room = get_object_or_404(Room, pk=pk)
+    room.delete()
+    return redirect("room_management")
+
+def NewsManagement(request):
+    return render(request, 'admin/Updates.html')
