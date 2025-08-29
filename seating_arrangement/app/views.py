@@ -540,8 +540,7 @@ def room_edit(request, pk):
         room.save()
         return redirect("room_management")
 
-    context = {"room": room}
-    return render(request, "admin/RoomManagement.html", context)
+    return redirect("room_management")
 
 
 def room_delete(request, pk):
