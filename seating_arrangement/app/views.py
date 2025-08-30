@@ -549,4 +549,36 @@ def room_delete(request, pk):
     return redirect("room_management")
 
 def NewsManagement(request):
-    return render(request, 'admin/Updates.html')
+    if request.method == "POST":
+        # Handle new post
+        title = request.POST.get("title")
+        content = request.POST.get("content")
+        posted_by = request.POST.get("posted_by")
+        status = "approved" if posted_by.lower() == "admin" else "pending"
+        NewsUpdate.objects.create(title=title, content=content, posted_by=posted_by, status=status)
+        return redirect("news_updates")
+
+    # Fetch approved and pending news
+    approved_news = NewsUpdate.objects.filter(status="approved").order_by('-created_at')
+    pending_news = NewsUpdate.objects.filter(status="pending").order_by('-created_at')
+
+    context = {
+        "approved_news": approved_news,
+        "pending_news": pending_news
+    }
+    return render(request, 'admin/Updates.html', context)
+
+def news_approve(request, pk):
+    news = get_object_or_404(NewsUpdate, pk=pk)
+    news.status = "approved"
+    news.save()
+    return redirect("news_updates")
+
+def news_reject(request, pk):
+    news = get_object_or_404(NewsUpdate, pk=pk)
+    news.status = "rejected"
+    news.save()
+    return redirect("news_updates")
+
+def analytics(request):
+    return render(request, "admin/Analytics.html")
