@@ -580,5 +580,55 @@ def news_reject(request, pk):
     news.save()
     return redirect("news_updates")
 
+from django.db.models import Count
+
 def analytics(request):
-    return render(request, "admin/Analytics.html")
+    # 1️⃣ Metrics
+    total_students = Student.objects.count()
+    total_rooms = Room.objects.count()
+    total_exams = Exam.objects.count()
+    
+    # Pending Approvals → from NewsUpdate model
+    pending_approvals = NewsUpdate.objects.filter(status="pending").count()
+
+    # 2️⃣ Students per Department
+    dept_data = (
+        Student.objects.values('department__name')
+        .annotate(count=Count('id'))
+        .order_by('department__name')
+    )
+    departments = [d['department__name'] for d in dept_data]
+    dept_counts = [d['count'] for d in dept_data]
+
+    # 3️⃣ Exams per Date (group by ExamSession.date)
+    exam_data = (
+        Exam.objects.values('session__date')
+        .annotate(count=Count('id'))
+        .order_by('session__date')
+    )
+    exam_dates = [str(e['session__date']) for e in exam_data]
+    exam_counts = [e['count'] for e in exam_data]
+
+    # 4️⃣ Room Utilization (number of students assigned via Seating)
+    room_data = (
+        Room.objects.values('room_number')
+        .annotate(count=Count('seating'))
+        .order_by('room_number')
+    )
+    room_names = [r['room_number'] for r in room_data]
+    room_counts = [r['count'] for r in room_data]
+
+    context = {
+        "total_students": total_students,
+        "total_rooms": total_rooms,
+        "total_exams": total_exams,
+        "pending_approvals": pending_approvals,
+        "departments": departments,
+        "dept_counts": dept_counts,
+        "exam_dates": exam_dates,
+        "exam_counts": exam_counts,
+        "room_names": room_names,
+        "room_counts": room_counts,
+    }
+
+    return render(request, "admin/Analytics.html", context)
