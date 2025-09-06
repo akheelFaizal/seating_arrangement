@@ -105,8 +105,31 @@ def StudentOverView(request):
 
     return render(request, 'student/studentOverView.html',context)
 
+
 def StudentSeatview(request):
-    return render(request, 'student/studentSeatview.html')
+    student = request.user.student  # Adjust if your auth model differs
+
+    seatings = (
+        Seating.objects
+        .select_related('exam__course', 'exam__session', 'room')
+        .filter(student=student)
+        .order_by('exam__session__date', 'exam__session__time')
+    )
+
+    next_exam_seating = seatings.filter(exam__session__date__gte=date.today()).first()
+
+    
+
+    context = {
+        'student': student,
+        'seatings': seatings,
+        'next_exam': next_exam_seating,
+        # 'announcements': announcements,
+        'today': date.today(),
+    }
+
+    return render(request, 'student/SeatView.html', context)
+
 
 def StudentResultView(request):
     return render(request, 'student/studentResultView.html')
@@ -555,4 +578,86 @@ def room_delete(request, pk):
     return redirect("room_management")
 
 def NewsManagement(request):
-    return render(request, 'admin/Updates.html')
+    if request.method == "POST":
+        # Handle new post
+        title = request.POST.get("title")
+        content = request.POST.get("content")
+        posted_by = request.POST.get("posted_by")
+        status = "approved" if posted_by.lower() == "admin" else "pending"
+        NewsUpdate.objects.create(title=title, content=content, posted_by=posted_by, status=status)
+        return redirect("news_updates")
+
+    # Fetch approved and pending news
+    approved_news = NewsUpdate.objects.filter(status="approved").order_by('-created_at')
+    pending_news = NewsUpdate.objects.filter(status="pending").order_by('-created_at')
+
+    context = {
+        "approved_news": approved_news,
+        "pending_news": pending_news
+    }
+    return render(request, 'admin/Updates.html', context)
+
+def news_approve(request, pk):
+    news = get_object_or_404(NewsUpdate, pk=pk)
+    news.status = "approved"
+    news.save()
+    return redirect("news_updates")
+
+def news_reject(request, pk):
+    news = get_object_or_404(NewsUpdate, pk=pk)
+    news.status = "rejected"
+    news.save()
+    return redirect("news_updates")
+
+from django.db.models import Count
+
+def analytics(request):
+    # 1️⃣ Metrics
+    total_students = Student.objects.count()
+    total_rooms = Room.objects.count()
+    total_exams = Exam.objects.count()
+    
+    # Pending Approvals → from NewsUpdate model
+    pending_approvals = NewsUpdate.objects.filter(status="pending").count()
+
+    # 2️⃣ Students per Department
+    dept_data = (
+        Student.objects.values('department__name')
+        .annotate(count=Count('id'))
+        .order_by('department__name')
+    )
+    departments = [d['department__name'] for d in dept_data]
+    dept_counts = [d['count'] for d in dept_data]
+
+    # 3️⃣ Exams per Date (group by ExamSession.date)
+    exam_data = (
+        Exam.objects.values('session__date')
+        .annotate(count=Count('id'))
+        .order_by('session__date')
+    )
+    exam_dates = [str(e['session__date']) for e in exam_data]
+    exam_counts = [e['count'] for e in exam_data]
+
+    # 4️⃣ Room Utilization (number of students assigned via Seating)
+    room_data = (
+        Room.objects.values('room_number')
+        .annotate(count=Count('seating'))
+        .order_by('room_number')
+    )
+    room_names = [r['room_number'] for r in room_data]
+    room_counts = [r['count'] for r in room_data]
+
+    context = {
+        "total_students": total_students,
+        "total_rooms": total_rooms,
+        "total_exams": total_exams,
+        "pending_approvals": pending_approvals,
+        "departments": departments,
+        "dept_counts": dept_counts,
+        "exam_dates": exam_dates,
+        "exam_counts": exam_counts,
+        "room_names": room_names,
+        "room_counts": room_counts,
+    }
+
+    return render(request, "admin/Analytics.html", context)

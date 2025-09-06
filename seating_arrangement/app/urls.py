@@ -29,7 +29,8 @@ urlpatterns = [
     path('seating-arrangement/', views.SeatingArrangement, name='seating_arrangement'),
     path('exam/', views.ExamSchedule, name='exam_schedule'),
     path('room-management/', views.room_management, name='room_management'),
-    path('news-management/', views.NewsManagement, name='news_management'),
+    path('news-management/', views.NewsManagement, name='news_updates'),
+    path('analytics/', views.analytics, name='analytics'),
 
     
     # admin functionalities
@@ -38,7 +39,6 @@ urlpatterns = [
     path("add-exam/", views.add_exam, name="add_exam"),
     path('edit-exam/<int:exam_id>/', views.edit_exam, name='edit_exam'),
     path('delete-exam/<int:exam_id>/', views.delete_exam, name='delete_exam'),
-    # path('students/<int:student_id>/edit/', views.edit_student, name='edit_student'),
     path('students/<int:student_id>/delete/', views.delete_student, name='delete_student'),
 
     path('room/<int:room_id>/map/', views.seating_map_detail, name='seating_map_detail'),
@@ -51,6 +51,8 @@ urlpatterns = [
     path("rooms/", views.room_management, name="room_management"),
     path("rooms/edit/<int:pk>/", views.room_edit, name="room_edit"),
     path("rooms/delete/<int:pk>/", views.room_delete, name="room_delete"),
+    path("news/approve/<int:pk>/", views.news_approve, name="news_approve"),
+    path("news/reject/<int:pk>/", views.news_reject, name="news_reject"),
 
 
 ]

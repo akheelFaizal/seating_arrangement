@@ -3,11 +3,13 @@
 <head>
     {% load static %}
     <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Student Exam Seat View - Example</title>
-    <link href="{% static 'sidebar.css' %}" rel="stylesheet" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Student Exam Seat View - SeatMaster Pro</title>
+
     <link href="{% static 'common.css' %}" rel="stylesheet" />
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet" />
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.5/font/bootstrap-icons.css" rel="stylesheet" />
+
     <style>
         .glass-bg {
             background: rgba(255,255,255,0.84);
@@ -51,7 +53,7 @@
 
 <div class="container-fluid min-vh-100 d-flex flex-column">
     <div class="row flex-grow-1">
-        <!-- Sidebar (Unchanged) -->
+        <!-- Sidebar -->
         <div id="sidebarWrapper" class="col-lg-2 d-none d-lg-block p-0 bg-white border-end">
             {% include 'components/studentsidebar.html' %}
         </div>
@@ -62,82 +64,82 @@
             <div class="container-fluid py-4 glass-bg">
 
                 <!-- Top: Student Stats Summary Grid -->
-                <div class="row g-3 mb-4">
-              <!-- Card 1 -->
-              <div class="col-12 col-sm-6 col-lg-3">
-                {% include 'components/Card.html' with title="Roll Number" value=21003438 icon="bi bi-person-badge"  color_start="#3b82f6" color_end="#2563eb" %}
-              </div>
-              <!-- Card 2 -->
-              <div class="col-12 col-sm-6 col-lg-3">
-                {% include 'components/Card.html' with title="Name" value="John"  icon="bi-people-fill"  color_start="#22c55e" color_end="#16a34a" color_start="#22c55e" color_end="#16a34a" %}
-              </div>
-              <!-- Card 3 -->
-              <div class="col-12 col-sm-6 col-lg-3">
-                {% include 'components/Card.html' with title="Next Exam" value="Mathematics" icon="bi-calendar-event" color_start="#a855f7" color_end="#7e22ce" %}
-              </div>
-              <!-- Card 4 -->
-              <div class="col-12 col-sm-6 col-lg-3">
-                {% include 'components/Card.html' with title="Room" value="A10123" icon="bi bi-door-open"  color_start="#f97316" color_end="#ea580c" %}
-              </div>
-            </div>
+                <div class="row g-3 mb-4 stats-grid">
+                    <div class="col-12 col-sm-6 col-lg-3">
+                        {% include 'components/Card.html' with
+                          title="Roll Number" value=student.roll_number icon="bi-person-badge"
+                          color_start="#3b82f6" color_end="#2563eb" %}
+                    </div>
+                    <div class="col-12 col-sm-6 col-lg-3">
+                        {% include 'components/Card.html' with
+                          title="Name" value=student.name icon="bi-people-fill"
+                          color_start="#22c55e" color_end="#16a34a" %}
+                    </div>
+                    {% if next_exam %}
+                    <div class="col-12 col-sm-6 col-lg-3">
+                        {% include 'components/Card.html' with
+                          title="Next Exam" value=next_exam.exam.course.name icon="bi-calendar-event"
+                          color_start="#a855f7" color_end="#7e22ce" %}
+                    </div>
+                    <div class="col-12 col-sm-6 col-lg-3">
+                        {% include 'components/Card.html' with
+                          title="Room" value=next_exam.room.name icon="bi-door-open"
+                          color_start="#f97316" color_end="#ea580c" %}
+                    </div>
+                    {% endif %}
+                </div>
 
-                <!-- Exam Seat Cards: Hardcoded Example Data -->
+                <!-- Exam Seat Cards -->
                 <div class="row mb-2">
                     <div class="col">
                         <h4 class="fw-bold mb-3 text-dark">Your Exam Seats</h4>
 
+                        {% for seat in seatings %}
                         <div class="seat-card d-flex align-items-center">
                             <span class="icon bi bi-door-open"></span>
                             <div>
-                                <div class="fw-semibold fs-5 text-primary">Mathematics</div>
-                                <div class="text-muted small">Aug 14, 2025 at 10:00 AM</div>
+                                <div class="fw-semibold fs-5 text-primary">{{ seat.exam.course.name }}</div>
+                                <div class="text-muted small">{{ seat.exam.session.date }} at {{ seat.exam.session.time }}</div>
                                 <div>
-                                    <span class="me-3 badge bg-info text-dark">Room: A101</span>
-                                    <span class="me-3 badge bg-warning text-dark">Seat: 15</span>
-                                    <span class="badge bg-success">Scheduled</span>
+                                    <span class="me-3 badge bg-info text-dark">Room: {{ seat.room.name }}</span>
+                                    <span class="me-3 badge bg-warning text-dark">Seat: {{ seat.seat_number }}</span>
+                                    {% if seat.exam.session.date < today %}
+                                    <span class="badge bg-success">Completed</span>
+                                    {% else %}
+                                    <span class="badge bg-warning text-dark">Scheduled</span>
+                                    {% endif %}
                                 </div>
                             </div>
                         </div>
-
-                        <div class="seat-card d-flex align-items-center">
-                            <span class="icon bi bi-door-open"></span>
-                            <div>
-                                <div class="fw-semibold fs-5 text-primary">Physics</div>
-                                <div class="text-muted small">Aug 17, 2025 at 2:00 PM</div>
-                                <div>
-                                    <span class="me-3 badge bg-info text-dark">Room: B203</span>
-                                    <span class="me-3 badge bg-warning text-dark">Seat: 7</span>
-                                    <span class="badge bg-warning text-dark">Pending</span>
-                                </div>
-                            </div>
-                        </div>
-
+                        {% empty %}
+                        <p>No allocated seats found.</p>
+                        {% endfor %}
                     </div>
                 </div>
 
                 <!-- Download Hall Ticket Button -->
                 <div class="row mb-4">
                     <div class="col text-center">
-                        <a href="#" class="btn btn-primary px-4 py-2">
+                        <a href="{{ hall_ticket_url|default:'#' }}" class="btn btn-primary px-4 py-2">
                             <i class="bi bi-download me-2"></i> Download Hall Ticket
                         </a>
                     </div>
                 </div>
 
-                <!-- Announcements Example -->
+                <!-- Announcements -->
                 <div class="row">
                     <div class="col">
                         <h5 class="fw-bold mb-3 text-dark">
                             <i class="bi bi-megaphone-fill text-warning me-2"></i> Latest Announcements
                         </h5>
+                        {% for announcement in announcements %}
                         <div class="announcement-box">
-                            <strong>Exams Start Aug 10</strong>
-                            <div class="small text-muted">Be on campus 30 mins before exam start time.</div>
+                            <strong>{{ announcement.title }}</strong>
+                            <div class="small text-muted">{{ announcement.content }}</div>
                         </div>
-                        <div class="announcement-box">
-                            <strong>Lab Access Restricted</strong>
-                            <div class="small text-muted">Labs will be closed during finals.</div>
-                        </div>
+                        {% empty %}
+                        <p>No announcements at this time.</p>
+                        {% endfor %}
                     </div>
                 </div>
 
@@ -146,8 +148,6 @@
     </div>
 </div>
 
-<!-- Bootstrap JS -->
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
-<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.5/font/bootstrap-icons.css">
 </body>
 </html>

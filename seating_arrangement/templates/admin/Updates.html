@@ -55,27 +55,20 @@
                 <div class="bg-white p-4 rounded shadow mb-4">
                     <h5 class="mb-3"><i class="bi bi-hourglass-split me-2"></i>Pending Approvals</h5>
                     <div class="list-group">
-                        <!-- Dummy Pending News -->
+                        {% for news in pending_news %}
                         <div class="list-group-item list-group-item-action d-flex justify-content-between align-items-center hover-shadow">
                             <div>
-                                <h6>Exam Schedule Update</h6>
-                                <p class="mb-0 small text-muted">Posted by Teacher John</p>
+                                <h6>{{ news.title }}</h6>
+                                <p class="mb-0 small text-muted">Posted by {{ news.posted_by|title }}</p>
                             </div>
                             <div>
-                                <button class="btn btn-sm btn-success me-1"><i class="bi bi-check-lg"></i> Approve</button>
-                                <button class="btn btn-sm btn-danger"><i class="bi bi-x-lg"></i> Reject</button>
+                                <a href="{% url 'news_approve' news.id %}" class="btn btn-sm btn-success me-1"><i class="bi bi-check-lg"></i> Approve</a>
+                                <a href="{% url 'news_reject' news.id %}" class="btn btn-sm btn-danger"><i class="bi bi-x-lg"></i> Reject</a>
                             </div>
                         </div>
-                        <div class="list-group-item list-group-item-action d-flex justify-content-between align-items-center hover-shadow">
-                            <div>
-                                <h6>Library Closed on Friday</h6>
-                                <p class="mb-0 small text-muted">Posted by Teacher Mary</p>
-                            </div>
-                            <div>
-                                <button class="btn btn-sm btn-success me-1"><i class="bi bi-check-lg"></i> Approve</button>
-                                <button class="btn btn-sm btn-danger"><i class="bi bi-x-lg"></i> Reject</button>
-                            </div>
-                        </div>
+                        {% empty %}
+                        <p class="text-muted">No pending approvals</p>
+                        {% endfor %}
                     </div>
                 </div>
 
@@ -83,31 +76,18 @@
                 <div class="bg-white p-4 rounded shadow">
                     <h5 class="mb-3"><i class="bi bi-newspaper me-2"></i>Approved News & Updates</h5>
                     <div class="row g-4">
-                        <!-- Dummy News Banner -->
+                        {% for news in approved_news %}
                         <div class="col-md-6">
                             <div class="news-banner hover-shadow">
-                                <h6>Semester Exams Announced</h6>
-                                <p class="mb-1 small">Admin | 20 Aug 2025</p>
-                                <p>Semester exams for all departments will start from 1st September. Please check your schedules.</p>
+                                <h6>{{ news.title }}</h6>
+                                <p class="mb-1 small">{{ news.posted_by|title }} | {{ news.created_at|date:"d M Y" }}</p>
+                                <p>{{ news.content }}</p>
                                 <span class="badge bg-success badge-status">Approved</span>
                             </div>
                         </div>
-                        <div class="col-md-6">
-                            <div class="news-banner hover-shadow">
-                                <h6>New Lab Equipment</h6>
-                                <p class="mb-1 small">Admin | 18 Aug 2025</p>
-                                <p>New computers and lab instruments have been installed in the Computer Lab.</p>
-                                <span class="badge bg-success badge-status">Approved</span>
-                            </div>
-                        </div>
-                        <div class="col-md-6">
-                            <div class="news-banner hover-shadow">
-                                <h6>Library Timings Updated</h6>
-                                <p class="mb-1 small">Admin | 15 Aug 2025</p>
-                                <p>Library will now be open from 8 AM to 8 PM on weekdays.</p>
-                                <span class="badge bg-success badge-status">Approved</span>
-                            </div>
-                        </div>
+                        {% empty %}
+                        <p class="text-muted">No approved news yet.</p>
+                        {% endfor %}
                     </div>
                 </div>
 

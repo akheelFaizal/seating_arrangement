@@ -1,5 +1,6 @@
 from django.db import models
 from datetime import timedelta, datetime
+from django.utils import timezone
 from django.core.validators import MinValueValidator
 
 # Create your models here.
@@ -96,3 +97,19 @@ class Seating(models.Model):
     exam = models.ForeignKey(Exam, on_delete=models.CASCADE)
     room = models.ForeignKey(Room, on_delete=models.CASCADE)
     seat_number = models.PositiveIntegerField()
+
+class NewsUpdate(models.Model):
+    STATUS_CHOICES = [
+        ('pending', 'Pending'),
+        ('approved', 'Approved'),
+        ('rejected', 'Rejected'),
+    ]
+
+    title = models.CharField(max_length=200)
+    content = models.TextField()
+    posted_by = models.CharField(max_length=50, choices=[('admin', 'Admin'), ('teacher', 'Teacher')])
+    status = models.CharField(max_length=10, choices=STATUS_CHOICES, default='pending')
+    created_at = models.DateTimeField(default=timezone.now)
+
+    def __str__(self):
+        return self.title
