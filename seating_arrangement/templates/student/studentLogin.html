@@ -78,11 +78,11 @@
     <h2 class="fw-bold">Welcome to Login System</h2>
     <p class="text-muted mb-4">Sign in by entering the information below</p>
 
-    <form method="POST">
+    <form method="POST" action="{% url 'login' %}">
       {% csrf_token %}
       <div class="mb-3 position-relative">
         <i class="bi bi-person position-absolute top-50 translate-middle-y ms-3 text-muted"></i>
-        <input type="text" id="roll_number" name="roll_number" class="form-control ps-5" placeholder="Roll Number" required>
+        <input type="text" id="roll_number" name="rollnumber" class="form-control ps-5" placeholder="Roll Number" required>
       </div>
       <div class="mb-3 position-relative">
         <i class="bi bi-lock-fill position-absolute top-50 translate-middle-y ms-3 text-muted"></i>

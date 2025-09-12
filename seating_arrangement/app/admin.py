@@ -6,6 +6,23 @@ from django.contrib import admin
 from .models import *
 
 
+from django.contrib import admin
+from django.contrib.auth.admin import UserAdmin
+from .models import CustomUser
+
+class CustomUserAdmin(UserAdmin):
+    # optional: show extra fields if you added any
+    fieldsets = UserAdmin.fieldsets + (
+        (None, {"fields": ("phone_number","roll_number")}),  # add custom field
+    )
+
+    add_fieldsets = UserAdmin.add_fieldsets + (
+        (None, {"fields": ("phone_number","roll_number")}),
+    )
+
+admin.site.register(CustomUser, CustomUserAdmin)
+
+
 #student info
 
 @admin.register(Department)

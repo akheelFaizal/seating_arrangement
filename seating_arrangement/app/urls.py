@@ -38,4 +38,8 @@ urlpatterns = [
     path("news/approve/<int:pk>/", views.news_approve, name="news_approve"),
     path("news/reject/<int:pk>/", views.news_reject, name="news_reject"),
 
+    # login and logout
+    path("login/", views.login_view, name="login"),
+    path("logout/", views.logout_view, name="logout"),
+
 ]

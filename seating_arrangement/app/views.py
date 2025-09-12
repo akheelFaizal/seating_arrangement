@@ -12,6 +12,28 @@ from datetime import timedelta
 import csv
 from django.http import HttpResponse
 from django.utils.timezone import now
+from django.contrib.auth import authenticate, login, logout
+
+def login_view(request):
+    if request.method == "POST":
+        rollnumber = request.POST.get("rollnumber")
+        password = request.POST.get("password")
+
+        user = authenticate(request, username=rollnumber, password=password)
+    
+        if user is not None:
+            login(request, user)  # saves user in session
+            return redirect(index)
+        else:
+            messages.error(request, "Invalid username or password")
+
+    return render(request, "student/studentLogin.html")
+
+
+def logout_view(request):
+    logout(request)  # clears session
+    return redirect("login")
+
 
 
 
