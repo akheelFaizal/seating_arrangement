@@ -1,0 +1,59 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    {% load static %}
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <link href="{% static 'sidebar.css' %}" rel="stylesheet" />
+    <link href="{% static 'common.css' %}" rel="stylesheet" />
+</head>
+
+<body>
+<div
+  id="sidebar"
+  class="d-flex flex-column open w-100 h-100"
+  aria-label="Sidebar Navigation"
+>
+  <div class="p-4 d-flex flex-column flex-grow-1">
+    <div class="d-flex align-items-center mb-4">
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"
+           fill="currentColor"
+           style="color: var(--yellow); width: 32px; height: 32px"
+           class="me-3">
+        <path d="M12 2L1 7l11 5 9-4.09V17h2V7L12 2z" />
+        <path d="M11 12v6h2v-6h-2z" />
+      </svg>
+      <h1 class="fs-4 fw-bold mb-0">SeatMaster Pro</h1>
+    </div>
+
+    <!-- Navigation -->
+    <nav id="navButtons" class="d-flex flex-column gap-3" role="navigation">
+
+      <a href="#room-details"
+         class="btn sidebar-btn text-start text-white d-flex align-items-center {{statusRD}}">
+        <i class="bi bi-door-open me-2"></i>
+        <span>Room Details</span>
+      </a>
+
+      <a href="#exam-notifications"
+         class="btn sidebar-btn text-start text-white d-flex align-items-center {{statusEN}}">
+        <i class="bi bi-bell-fill me-2"></i>
+        <span>Exam Notifications</span>
+      </a>
+
+      <a href="#profile"
+         class="btn sidebar-btn text-start text-white d-flex align-items-center {{statusPR}}">
+        <i class="bi bi-person-circle me-2"></i>
+        <span>Profile</span>
+      </a>
+
+      <a href="#allotted-students"
+         class="btn sidebar-btn text-start text-white d-flex align-items-center {{statusAS}}">
+        <i class="bi bi-people-fill me-2"></i>
+        <span>Allotted Room Students</span>
+      </a>
+    </nav>
+  </div>
+</div>
+</body>
+</html>

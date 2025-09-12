@@ -11,6 +11,7 @@ urlpatterns = [
     path('student/resultview/', views.StudentResultView, name='student_resultview'),
     path('student/examdetail/', views.StudentExamDetail, name='student_examdetail'),
     path('student/signupaction',views.StudentSignupAction),
+   
 
     #admin
     path('adminhome', views.index),
@@ -53,6 +54,10 @@ urlpatterns = [
     path("rooms/delete/<int:pk>/", views.room_delete, name="room_delete"),
     path("news/approve/<int:pk>/", views.news_approve, name="news_approve"),
     path("news/reject/<int:pk>/", views.news_reject, name="news_reject"),
+
+    #invigilator 
+    path("invigilator/invigilatorOverview",views.invigilator_dashboard,name="invigilatordashboard"),
+    path("invigilator/seatarrangement",views.invigilatorSeatarrangement)
 
 
 ]

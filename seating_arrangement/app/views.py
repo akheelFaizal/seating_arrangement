@@ -12,6 +12,10 @@ from datetime import timedelta
 import csv
 from django.http import HttpResponse
 from django.utils.timezone import now
+from datetime import date
+from django.shortcuts import render
+from django.contrib.auth.decorators import login_required
+from .models import Seating, NewsUpdate  # or your announcements model
 
 
 
@@ -106,29 +110,59 @@ def StudentOverView(request):
     return render(request, 'student/studentOverView.html',context)
 
 
+
+
+
 def StudentSeatview(request):
-    student = request.user.student  # Adjust if your auth model differs
+    # Dummy student info
+    student = {
+        'roll_number': '21003438',
+        'name': 'John Doe',
+    }
 
-    seatings = (
-        Seating.objects
-        .select_related('exam__course', 'exam__session', 'room')
-        .filter(student=student)
-        .order_by('exam__session__date', 'exam__session__time')
-    )
+    # Dummy next exam seat
+    next_exam = {
+        'exam': {
+            'course': {'name': 'Mathematics'}
+        },
+        'room': {'name': 'A101'},
+        'session': {
+            'date': '2025-08-14',
+            'time': '10:00 AM'
+        }
+    }
 
-    next_exam_seating = seatings.filter(exam__session__date__gte=date.today()).first()
+    # Dummy seatings list
+    seatings = [
+        {
+            'exam': {'course': {'name': 'Mathematics'}, 'session': {'date': '2025-08-14', 'time': '10:00 AM'}},
+            'room': {'name': 'A101'},
+            'seat_number': 15,
+        },
+        {
+            'exam': {'course': {'name': 'Physics'}, 'session': {'date': '2025-08-17', 'time': '2:00 PM'}},
+            'room': {'name': 'B203'},
+            'seat_number': 7,
+        },
+    ]
 
-    
+    # Dummy announcements
+    announcements = [
+        {'title': 'Exams Start Aug 10', 'content': 'Be on campus 30 mins before exam start time.'},
+        {'title': 'Lab Access Restricted', 'content': 'Labs will be closed during finals.'},
+    ]
 
     context = {
         'student': student,
+        'next_exam': next_exam,
         'seatings': seatings,
-        'next_exam': next_exam_seating,
-        # 'announcements': announcements,
+        'announcements': announcements,
         'today': date.today(),
+        'hall_ticket_url': '#'
     }
+    return render(request, 'student/StudentSeatView.html', context)
 
-    return render(request, 'student/SeatView.html', context)
+
 
 
 def StudentResultView(request):
@@ -661,3 +695,61 @@ def analytics(request):
     }
 
     return render(request, "admin/Analytics.html", context)
+
+
+
+
+
+
+#invigilators
+
+
+from django.shortcuts import render
+
+def invigilator_dashboard(request):
+    return render(request, 'invigilator/invigilatorOverview.html')
+
+
+def invigilatorSeatarrangement(request):
+    if request.method == "POST":
+        # Single student seat update
+        for key, value in request.POST.items():
+            if key.startswith("seat_"):
+                roll_number = key.replace("seat_", "")
+                seat_value = value.strip()
+                if seat_value:
+                    student = get_object_or_404(Student, roll_number=roll_number)
+                    student.seat = seat_value
+                    student.save()
+                    messages.success(request, f"Seat updated for {student.name}")
+                return redirect("edit_seats")
+
+        # Bulk CSV upload
+        if "csv_file" in request.FILES:
+            csv_file = request.FILES["csv_file"]
+            if not csv_file.name.endswith(".csv"):
+                messages.error(request, "Please upload a valid CSV file.")
+                return redirect("edit_seats")
+
+            data = csv_file.read().decode("utf-8").splitlines()
+            reader = csv.DictReader(data)
+
+            for row in reader:
+                roll = row.get("roll_number")
+                seat = row.get("seat")
+                try:
+                    student = Student.objects.get(roll_number=roll)
+                    student.seat = seat
+                    student.save()
+                except Student.DoesNotExist:
+                    continue
+            messages.success(request, "Seats updated successfully via CSV!")
+            return redirect(invigilatorSeatarrangement)
+
+    students = Student.objects.all().select_related("course", "department")
+    return render(request,'invigilator/invigilatorSeatarrangement.html', {"students": students})
+
+
+
+
+
