@@ -10,17 +10,26 @@ from django.contrib import admin
 from django.contrib.auth.admin import UserAdmin
 from .models import CustomUser
 
+@admin.register(CustomUser)
 class CustomUserAdmin(UserAdmin):
-    # optional: show extra fields if you added any
-    fieldsets = UserAdmin.fieldsets + (
-        (None, {"fields": ("phone_number","roll_number")}),  # add custom field
+    ordering = ("roll_number",)
+    list_display = ("roll_number", "name", "email", "course", "department", "year", "is_staff")
+    search_fields = ("roll_number", "name", "email")
+
+    fieldsets = (
+        (None, {"fields": ("roll_number", "password")}),
+        ("Personal info", {"fields": ("name", "email")}),
+        ("Academic", {"fields": ("course", "department", "year")}),
+        ("Permissions", {"fields": ("is_active", "is_staff", "is_superuser", "groups", "user_permissions")}),
+        ("Important dates", {"fields": ("last_login", "date_joined")}),
     )
 
-    add_fieldsets = UserAdmin.add_fieldsets + (
-        (None, {"fields": ("phone_number","roll_number")}),
+    add_fieldsets = (
+        (None, {
+            "classes": ("wide",),
+            "fields": ("roll_number", "name", "email", "course", "department", "year", "password1", "password2"),
+        }),
     )
-
-admin.site.register(CustomUser, CustomUserAdmin)
 
 
 #student info

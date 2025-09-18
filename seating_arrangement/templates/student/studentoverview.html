@@ -50,14 +50,26 @@
                         <div class="p-4 dashboard-card" style="background: linear-gradient(135deg,#a855f7,#7e22ce);">
                             <i class="bi bi-person-badge fs-2"></i>
                             <h5 class="mt-3">Roll Number</h5>
-                            <h3 class="fw-bold">{{ student.roll_number }}</h3>
+                            <h3 class="fw-bold">
+                                {% if student %}
+                                    {{ student.roll_number }}
+                                {% else %}
+                                    {{ user.roll_number|default:"N/A" }}
+                                {% endif %}
+                            </h3>
                         </div>
                     </div>
                     <div class="col-12 col-sm-6 col-lg-6">
                         <div class="p-4 dashboard-card" style="background: linear-gradient(135deg,#f97316,#ea580c);">
                             <i class="bi bi-person-fill fs-2"></i>
                             <h5 class="mt-3">Name</h5>
-                            <h3 class="fw-bold">{{ student.name }}</h3>
+                            <h3 class="fw-bold">
+                                {% if student %}
+                                    {{ student.name }}
+                                {% else %}
+                                    {{ user.username }}
+                                {% endif %}
+                            </h3>
                         </div>
                     </div>
                 </div>
@@ -84,7 +96,7 @@
                                 {% for seat in exam_seats %}
                                 <li class="list-group-item d-flex justify-content-between">
                                     <span>{{ seat.exam_name }}</span>
-                                    <span class="badge bg-primary">Seat {{ seat.seat_number }} - Room {{ seat.room }}</span>
+                                    <span class="badge bg-primary">Seat {{ seat.seat_number }} - Room {{ seat.room_number }}</span>
                                 </li>
                                 {% empty %}
                                 <li class="list-group-item">No seating assigned.</li>
@@ -98,12 +110,14 @@
                 <div class="row mt-4">
                     <div class="col-6">
                         <div class="section-box">
-                            <h5 class="fw-bold mb-3"><i class="bi bi-megaphone-  fill me-2 text-warning"></i> Latest Announcements</h5>
+                            <h5 class="fw-bold mb-3"><i class="bi bi-megaphone-fill me-2 text-warning"></i> Latest Announcements</h5>
                             {% for announcement in announcements %}
                             <div class="p-3 bg-light rounded news-item mb-2">
                                 <strong>{{ announcement.title }}</strong><br>
                                 <small class="text-muted">{{ announcement.content }}</small>
                             </div>
+                            {% empty %}
+                            <p class="text-muted">No announcements available.</p>
                             {% endfor %}
                         </div>
                     </div>

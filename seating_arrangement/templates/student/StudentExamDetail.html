@@ -71,60 +71,62 @@
 
             <div class="container-fluid py-4">
 
+                <!-- Cards Section -->
                 <div class="row g-3">
-              <!-- Card 1 -->
-              <div class="col-12 col-sm-6 col-lg-3">
-                {% include 'components/Card.html' with title="Roll Number" value=21003438 icon="bi bi-person-badge"  color_start="#3b82f6" color_end="#2563eb" %}
-              </div>
-              <!-- Card 2 -->
-              <div class="col-12 col-sm-6 col-lg-3">
-                {% include 'components/Card.html' with title="Name" value="John"  icon="bi-people-fill"  color_start="#22c55e" color_end="#16a34a" color_start="#22c55e" color_end="#16a34a" %}
-              </div>
-              <!-- Card 3 -->
-              <div class="col-12 col-sm-6 col-lg-3">
-                {% include 'components/Card.html' with title="Next Exam" value="Mathematics" icon="bi-calendar-event" color_start="#a855f7" color_end="#7e22ce" %}
-              </div>
-              <!-- Card 4 -->
-              <div class="col-12 col-sm-6 col-lg-3">
-                {% include 'components/Card.html' with title="Room" value="A10123" icon="bi bi-door-open"  color_start="#f97316" color_end="#ea580c" %}
-              </div>
-            </div>
+                    <!-- Roll Number -->
+                    <div class="col-12 col-sm-6 col-lg-3">
+                        {% include 'components/Card.html' with title="Roll Number" value=student.roll_number icon="bi bi-person-badge" color_start="#3b82f6" color_end="#2563eb" %}
+                    </div>
+
+                    <!-- Name -->
+                    <div class="col-12 col-sm-6 col-lg-3">
+                        {% include 'components/Card.html' with title="Name" value=student.name icon="bi-people-fill" color_start="#22c55e" color_end="#16a34a" %}
+                    </div>
+
+                    <!-- Next Exam -->
+                    <div class="col-12 col-sm-6 col-lg-3">
+                        {% if next_exam %}
+                            {% include 'components/Card.html' with title="Next Exam" value=next_exam.exam.subject_name icon="bi-calendar-event" color_start="#a855f7" color_end="#7e22ce" %}
+                        {% else %}
+                            {% include 'components/Card.html' with title="Next Exam" value="No upcoming exams" icon="bi-calendar-event" color_start="#a855f7" color_end="#7e22ce" %}
+                        {% endif %}
+                    </div>
+
+                    <!-- Room -->
+                    <div class="col-12 col-sm-6 col-lg-3">
+                        {% if next_exam %}
+                            {% include 'components/Card.html' with title="Room" value=next_exam.room.room_number icon="bi bi-door-open" color_start="#f97316" color_end="#ea580c" %}
+                        {% else %}
+                            {% include 'components/Card.html' with title="Room" value="-" icon="bi bi-door-open" color_start="#f97316" color_end="#ea580c" %}
+                        {% endif %}
+                    </div>
+                </div>
+
                 <!-- Upcoming Exams List -->
-                <div class="glass-bg">
+                <div class="glass-bg mt-4">
                     <h5 class="fw-bold mb-4 text-secondary">All Upcoming Exams</h5>
 
+                    {% for seating in seatings %}
                     <div class="exam-list-item">
                         <div class="exam-info">
-                            <strong>Mathematics</strong> <br />
-                            <small class="text-muted">Aug 14, 2025 at 10:00 AM</small> <br />
-                            <small class="text-muted">Room A101</small>
+                            <strong>{{ seating.exam.subject_name }}</strong><br />
+                            <small class="text-muted">
+                                {{ seating.exam.session.date|date:"M d, Y" }} 
+                                at {{ seating.exam.session.start_time|time:"h:i A" }}
+                            </small><br />
+                            <small class="text-muted">Room {{ seating.room.name }}</small>
                         </div>
                         <div class="exam-status">
-                            <span class="badge-scheduled">Scheduled</span>
+                            {% if seating.exam.session.date < today %}
+                                        <span class="badge bg-success">Completed</span>
+                            {% else %}
+                                <span class="badge bg-warning text-dark">Scheduled</span>
+                            {% endif %}
                         </div>
                     </div>
-
-                    <div class="exam-list-item">
-                        <div class="exam-info">
-                            <strong>Physics</strong> <br />
-                            <small class="text-muted">Aug 17, 2025 at 2:00 PM</small> <br />
-                            <small class="text-muted">Room B203</small>
-                        </div>
-                        <div class="exam-status">
-                            <span class="badge-pending">Pending</span>
-                        </div>
-                    </div>
-
-                    <div class="exam-list-item">
-                        <div class="exam-info">
-                            <strong>Chemistry</strong> <br />
-                            <small class="text-muted">Aug 19, 2025 at 9:00 AM</small> <br />
-                            <small class="text-muted">Room C110</small>
-                        </div>
-                        <div class="exam-status">
-                            <span class="badge-pending">Pending</span>
-                        </div>
-                    </div>
+                    {% empty %}
+                    <p class="text-muted">No exams found.</p>
+                    {% endfor %}
                 </div>
 
                 <!-- Announcements -->

@@ -9,16 +9,6 @@ from django.contrib.auth.models import AbstractUser
 from django.db import models
 from django.contrib.auth.hashers import make_password
 
-
-class CustomUser(AbstractUser):
-    # You can add extra fields if needed
-    phone_number = models.CharField(max_length=15, blank=True, null=True)
-    roll_number = models.CharField(max_length=50, blank=True, null=True)
-
-    def __str__(self):
-        return self.username
-
-
 #student tables
 
 class Department(models.Model):
@@ -33,6 +23,27 @@ class Course(models.Model):
     
     def __str__(self):
         return self.name
+
+
+class CustomUser(AbstractUser):
+    # You can add extra fields if needed
+
+    roll_number = models.CharField(max_length=20, unique=True,blank=True,null=True)
+    name = models.CharField(max_length=100,blank=True,null=True)
+    course = models.ForeignKey(Course, on_delete=models.CASCADE,blank=True,null=True)
+    department = models.ForeignKey(Department, on_delete=models.CASCADE,blank=True,null=True)
+    year = models.PositiveIntegerField(
+        choices=[(1, "1st Year"), (2, "2nd Year"), (3, "3rd Year"), (4, "4th Year")]
+    )
+
+    # Tell Django to use roll_number instead of username
+    USERNAME_FIELD = "roll_number"
+    REQUIRED_FIELDS = ["name", "course", "department", "year"]
+
+    def __str__(self):
+            return self.username
+
+
 
     
 class Student(models.Model):
@@ -58,8 +69,6 @@ class Invigilator(models.Model):
 
     def __str__(self):
         return self.name
-
-
 
 
 

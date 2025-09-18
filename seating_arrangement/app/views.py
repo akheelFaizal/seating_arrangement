@@ -1,39 +1,41 @@
-from django.db.models import Prefetch
 from collections import defaultdict
-from django.db.models import Q
-from django.shortcuts import render, redirect, get_object_or_404
-from . models import *
-from django.contrib import messages
+from datetime import date, timedelta
+
 import csv
 import random
-from django.contrib.auth.hashers import make_password
-from django.contrib.auth.hashers import check_password
-from datetime import timedelta
-import csv
+
+from django.contrib import messages
+from django.contrib.auth import authenticate, login, logout
+from django.contrib.auth.decorators import login_required
+from django.contrib.auth.hashers import make_password, check_password
+from django.db.models import Prefetch, Q
 from django.http import HttpResponse
+from django.shortcuts import render, redirect, get_object_or_404
 from django.utils.timezone import now
 
-from datetime import date
-from django.shortcuts import render
-from django.contrib.auth.decorators import login_required
-from .models import Seating, NewsUpdate  # or your announcements model
+from .models import *   
 
-from django.contrib.auth import authenticate, login, logout
 
 def login_view(request):
     if request.method == "POST":
         rollnumber = request.POST.get("rollnumber")
         password = request.POST.get("password")
 
-        user = authenticate(request, username=rollnumber, password=password)
+        user = authenticate(request, username=rollnumber, password=password)  # uses custom backend
     
         if user is not None:
-            login(request, user)  # saves user in session
-            return redirect(index)
+            login(request, user)
+
+            # Save CustomUser.id (student id) in session
+            request.session['student_id'] = user.id  
+
+            return redirect("student_overview")
         else:
-            messages.error(request, "Invalid username or password")
+            messages.error(request, "Invalid roll number or password")
 
     return render(request, "student/studentLogin.html")
+
+
 
 
 def logout_view(request):
@@ -48,26 +50,6 @@ def index(request):
       return render(request, 'admin/Admin.html')
 
 #student
-def StudentLogin(request):
-    if request.method == 'POST':
-        roll_number = request.POST.get('roll_number')
-        password_raw = request.POST.get('password')
-
-        try:
-            student = Student.objects.get(roll_number=roll_number)
-        except Student.DoesNotExist:
-            messages.error(request, "Invalid roll number or password.")
-            return redirect(StudentLogin)
-
-        if check_password(password_raw, student.password):
-            request.session['student_id'] = student.id  # simple session login
-            messages.success(request, "Login successful!")
-            return redirect(StudentOverView)  # or wherever is appropriate
-        else:
-            messages.error(request, "Invalid roll number or password.")
-            return redirect(StudentLogin)
-
-    return render(request, 'student/studentLogin.html')
 
 
 def StudentSignupAction(request):
@@ -111,81 +93,76 @@ def StudentSignupAction(request):
     return render(request, 'student/StudentSignup.html', {'departments': departments, 'courses': courses})
 
 
+
+@login_required
 def StudentOverView(request):
+    # Get the student_id from session (CustomUser ID)
+    student_id = request.session.get("student_id")
 
-    student_id = request.session.get('student_id')
-    student = Student.objects.get(id=student_id)
+    if not student_id:
+        return redirect("student_login")
 
-    # Fetch exam seats for this student
-    # exam_seats = ExamSeat.objects.filter(student=student)
+    try:
+        # Get the logged-in user
+        custom_user = CustomUser.objects.get(id=student_id)
+    except CustomUser.DoesNotExist:
+        return redirect("student_login")
 
-    # Fetch hall ticket URL (assuming student.hall_ticket_pdf exists)
-    # hall_ticket_url = student.hall_ticket_pdf.url if student.hall_ticket_pdf else None
-
-    # Fetch Announcements
-    # announcements = Announcement.objects.order_by('-date')[:3]  # Latest 3
+    # Try to fetch matching Student record using roll_number
+    student_data = None
+    if custom_user.roll_number:
+        try:
+            student_data = Student.objects.get(roll_number=custom_user.roll_number)
+        except Student.DoesNotExist:
+            student_data = None
 
     context = {
-        'student': student,
-        # 'exam_seats': exam_seats,
-        # 'hall_ticket_url': hall_ticket_url,
-        # 'announcements': announcements,
+        "user": custom_user,     # details from CustomUser
+        "student": student_data  # details from Student model
     }
+    return render(request, "student/studentOverView.html", context)
 
-    return render(request, 'student/studentOverView.html',context)
+from datetime import date
+from django.contrib.auth.decorators import login_required
+from django.shortcuts import get_object_or_404, render
+from .models import Student, Seating
 
-
-
-
-
+@login_required
 def StudentSeatview(request):
-    # Dummy student info
-    student = {
-        'roll_number': '21003438',
-        'name': 'John Doe',
-    }
+    # Get the logged-in student based on roll number
+    student = get_object_or_404(Student, roll_number=request.user.roll_number)
 
-    # Dummy next exam seat
-    next_exam = {
-        'exam': {
-            'course': {'name': 'Mathematics'}
-        },
-        'room': {'name': 'A101'},
-        'session': {
-            'date': '2025-08-14',
-            'time': '10:00 AM'
-        }
-    }
+    # Fetch all seatings for this student
+    seatings = (
+        Seating.objects.filter(student=student)
+        .select_related("exam__session", "exam", "exam__department", "room")
+        .order_by("exam__session__date", "exam__session__start_time")
+    )
 
-    # Dummy seatings list
-    seatings = [
-        {
-            'exam': {'course': {'name': 'Mathematics'}, 'session': {'date': '2025-08-14', 'time': '10:00 AM'}},
-            'room': {'name': 'A101'},
-            'seat_number': 15,
-        },
-        {
-            'exam': {'course': {'name': 'Physics'}, 'session': {'date': '2025-08-17', 'time': '2:00 PM'}},
-            'room': {'name': 'B203'},
-            'seat_number': 7,
-        },
-    ]
+    # Find the next upcoming exam
+    next_exam = (
+        seatings.filter(exam__session__date__gte=date.today())
+        .order_by("exam__session__date", "exam__session__start_time")
+        .first()
+    )
 
-    # Dummy announcements
+    # Announcements (replace with DB model if available)
     announcements = [
-        {'title': 'Exams Start Aug 10', 'content': 'Be on campus 30 mins before exam start time.'},
-        {'title': 'Lab Access Restricted', 'content': 'Labs will be closed during finals.'},
+        {"title": "Exams Start Soon", "content": "Be on campus 30 mins before exam start time."},
+        {"title": "Lab Closed", "content": "Labs will be closed during exams."},
     ]
 
     context = {
-        'student': student,
-        'next_exam': next_exam,
-        'seatings': seatings,
-        'announcements': announcements,
-        'today': date.today(),
-        'hall_ticket_url': '#'
+        "student": student,
+        "seatings": seatings,
+        "next_exam": next_exam,
+        "announcements": announcements,
+        "today": date.today(),
+        "hall_ticket_url": "#",  # Replace with actual hall ticket link if available
     }
-    return render(request, 'student/StudentSeatView.html', context)
+    return render(request, "student/StudentSeatView.html", context)
+
+
 
 
 
@@ -193,9 +170,34 @@ def StudentSeatview(request):
 def StudentResultView(request):
     return render(request, 'student/studentResultView.html')
 
+
+from django.shortcuts import render, get_object_or_404
+from django.utils.timezone import now
+from datetime import date
+from .models import Student, Seating
+
 def StudentExamDetail(request):
-    return render(request,'student/StudentExamDetail.html')\
-    
+    # Get logged-in student
+    student = get_object_or_404(Student, roll_number=request.user.roll_number)
+
+    # Fetch seatings (exams for this student)
+    seatings = (
+        Seating.objects.filter(student=student, exam__session__date__gte=date.today())
+        .select_related("exam__session", "exam", "exam__department", "room")
+        .order_by("exam__session__date", "exam__session__start_time")
+    )
+
+    # Next upcoming exam
+    next_exam = seatings.first()
+
+    context = {
+        "student": student,
+        "seatings": seatings,
+        "next_exam": next_exam,
+    }
+    return render(request, "student/StudentExamDetail.html", context)
+
+
 #admin
 
 
@@ -775,6 +777,81 @@ def invigilatorSeatarrangement(request):
     return render(request,'invigilator/invigilatorSeatarrangement.html', {"students": students})
 
 
+def invigilatorProfile(request):
+    return render(request,"invigilator/invigilatorProfile.html")
 
 
 
+
+
+
+# # users/views.py
+# from django.contrib.auth import get_user_model
+# from django.contrib.auth.forms import UserCreationForm
+# from django.contrib.auth import login
+# from django.shortcuts import render, redirect
+
+# User = get_user_model()
+
+# # Inline form class (can be moved to forms.py later)
+# class CustomUserCreationForm(UserCreationForm):
+#     class Meta:
+#         model = User
+#         fields = (
+#             "roll_number", "name", "email", "course", "department", "year",
+#             "password1", "password2"
+#         )
+
+# def signup(request):
+#     if request.method == "POST":
+#         form = CustomUserCreationForm(request.POST)
+#         if form.is_valid():
+#             user = form.save()
+#             login(request, user)  # optional auto-login after signup
+#             return redirect("student_overview")
+#     else:
+#         form = CustomUserCreationForm()
+#     return render(request, "student/signup.html", {"form": form})
+from django.shortcuts import render, redirect
+from django.contrib import messages
+from .models import CustomUser, Course, Department
+
+def student_signup(request):
+    if request.method == "POST":
+        roll_number = request.POST.get("roll_number")
+        name = request.POST.get("name")
+        course_id = request.POST.get("course")
+        department_id = request.POST.get("department")
+        year = request.POST.get("year")
+        password = request.POST.get("password")
+
+        # Prevent duplicate roll numbers
+        if CustomUser.objects.filter(roll_number=roll_number).exists():
+            messages.error(request, "Roll number already registered.")
+            return redirect("student_signup")
+
+        # Get related course and department
+        course_obj = Course.objects.get(id=course_id)
+        dept_obj = Department.objects.get(id=department_id)
+
+        # ✅ Create user (fill username with roll_number)
+        user = CustomUser.objects.create_user(
+            username=roll_number,      # important!
+            roll_number=roll_number,
+            name=name,
+            course=course_obj,
+            department=dept_obj,
+            year=year,
+            password=password,
+        )
+
+        messages.success(request, "Account created successfully. Please login.")
+        return redirect("login")
+
+    # For GET request, render the signup form
+    courses = Course.objects.all()
+    departments = Department.objects.all()
+    return render(request, "student/studentSignup.html", {
+        "courses": courses,
+        "departments": departments,
+    })

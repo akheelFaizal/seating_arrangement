@@ -168,7 +168,7 @@
 
             <div class="row g-4" id="roomsContainer">
               {% for room in rooms %}
-<<<<<<< HEAD
+
               <div class="col-md-4">
                 <a
                   href="{% url 'seating_map_detail' room.id %}"
@@ -177,12 +177,12 @@
                   <div class="border rounded p-3 hover-shadow">
                     <h6 class="fw-bold">{{ room.room_number }}</h6>
                     <small class="text-muted">
-<<<<<<< HEAD
+
                       Capacity: {{ room.capacity }} | Assigned: {{room.seating_set.count }}
                        
-=======
+
                       Capacity: {{ room.capacity }} | Assigned: {{ room.seating_set.count }}
->>>>>>> 433179d6439f24382fc1db689127f88a7426a0b4
+
                     </small>
                     <hr />
                     <div class="d-flex flex-wrap gap-1">
@@ -193,7 +193,7 @@
                       {% empty %}
                       <p class="text-muted small">No students assigned yet.</p>
                       {% endfor %}
-=======
+
                 {% if room.seating_set.all %}
                   {% with room.seating_set.first as first_seat %}
                     <div class="col-md-4 room-card" data-date="{{ first_seat.exam.session.date|date:'Y-m-d' }}">
@@ -212,7 +212,7 @@
                           </div>
                         </div>
                       </a>
->>>>>>> 842161e65e06f3c0e9f7fdaea97139de35ef08c8
+
                     </div>
                   {% endwith %}
                 {% else %}
