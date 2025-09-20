@@ -26,28 +26,41 @@ class Course(models.Model):
 
 
 
+from django.contrib.auth.models import AbstractUser
+from django.db import models
+
+
 class CustomUser(AbstractUser):
-    # username will be roll_number for students or employee_id for invigilators
+    # Common fields
     name = models.CharField(max_length=100, blank=True, null=True)
+
+    # Student-specific fields
     course = models.ForeignKey("Course", on_delete=models.CASCADE, blank=True, null=True)
     department = models.ForeignKey("Department", on_delete=models.CASCADE, blank=True, null=True)
     year = models.PositiveIntegerField(
         choices=[(1, "1st Year"), (2, "2nd Year"), (3, "3rd Year"), (4, "4th Year")],
         blank=True, null=True
     )
-    
-    # New fields for invigilator support
+
+    # Role
     ROLE_CHOICES = (
         ("student", "Student"),
         ("invigilator", "Invigilator"),
     )
     role = models.CharField(max_length=20, choices=ROLE_CHOICES, default="student")
-    # For invigilators
+
+    # Invigilator-specific fields
     employee_id = models.CharField(max_length=50, blank=True, null=True)
     invigilator_department = models.CharField(max_length=100, blank=True, null=True)
+    profile_picture = models.ImageField(upload_to="invigilators/", blank=True, null=True)  # ✅ Only for invigilator
+    
+    
+    
+
 
     def __str__(self):
         return f"{self.name or self.username} ({self.role})"
+
 
 
 
@@ -62,7 +75,7 @@ class Student(models.Model):
         choices=[(1, "1st Year"), (2, "2nd Year"), (3, "3rd Year"), (4, "4th Year")],
         default=1
     )
-
+    is_debarred = models.BooleanField(default=False)
     def _str_(self):
         return f"{self.name} ({self.roll_number})"
     

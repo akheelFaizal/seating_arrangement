@@ -739,48 +739,87 @@ def invigilator_dashboard(request):
     return render(request, 'invigilator/invigilatorOverview.html', context)
 
 
+from django.shortcuts import render, get_object_or_404, redirect
+from django.contrib import messages
+from .models import Student
+import csv
+from django.shortcuts import render, get_object_or_404, redirect
+from django.contrib import messages
+from .models import Student
+import csv
+
 def invigilatorSeatarrangement(request):
     if request.method == "POST":
-        # Single student seat update
-        for key, value in request.POST.items():
-            if key.startswith("seat_"):
-                roll_number = key.replace("seat_", "")
-                seat_value = value.strip()
-                if seat_value:
-                    student = get_object_or_404(Student, roll_number=roll_number)
-                    student.seat = seat_value
-                    student.save()
-                    messages.success(request, f"Seat updated for {student.name}")
-                return redirect("edit_seats")
 
-        # Bulk CSV upload
+        # 1️⃣ Update all seats
+        if "update_all_seats" in request.POST:
+            updated_count = 0
+            for key, value in request.POST.items():
+                if key.startswith("seat_"):
+                    roll_number = key.replace("seat_", "")
+                    seat_value = value.strip()
+                    if seat_value:
+                        student = get_object_or_404(Student, roll_number=roll_number)
+                        if student.seat != seat_value:
+                            student.seat = seat_value
+                            student.save()
+                            updated_count += 1
+            messages.success(request, f"Seats updated for {updated_count} students.")
+            return redirect("invigilatorseatarrangement")
+
+        # 2️⃣ Debar single student
+        for key in request.POST:
+            if key.startswith("debar_"):
+                roll_number = key.replace("debar_", "")
+                student = get_object_or_404(Student, roll_number=roll_number)
+                student.is_debarred = True
+                student.save()
+                messages.warning(request, f"{student.name} has been debarred!")
+                return redirect("invigilatorseatarrangement")
+
+        # 3️⃣ Bulk CSV upload
         if "csv_file" in request.FILES:
             csv_file = request.FILES["csv_file"]
             if not csv_file.name.endswith(".csv"):
                 messages.error(request, "Please upload a valid CSV file.")
-                return redirect("edit_seats")
+                return redirect("invigilatorseatarrangement")
 
             data = csv_file.read().decode("utf-8").splitlines()
             reader = csv.DictReader(data)
+            csv_updated_count = 0
+            debarred_count = 0
 
             for row in reader:
                 roll = row.get("roll_number")
                 seat = row.get("seat")
+                debar = row.get("debarred", "").lower()
+
                 try:
                     student = Student.objects.get(roll_number=roll)
-                    student.seat = seat
+                    if seat:
+                        student.seat = seat
+                        csv_updated_count += 1
+                    if debar in ["yes", "true", "1"]:
+                        student.is_debarred = True
+                        debarred_count += 1
                     student.save()
                 except Student.DoesNotExist:
                     continue
-            messages.success(request, "Seats updated successfully via CSV!")
-            return redirect(invigilatorSeatarrangement)
 
+            messages.success(
+                request,
+                f"CSV processed: Seats updated: {csv_updated_count}, Students debarred: {debarred_count}"
+            )
+            return redirect("invigilatorseatarrangement")
+
+    # GET request
     students = Student.objects.all().select_related("course", "department")
-    return render(request,'invigilator/invigilatorSeatarrangement.html', {"students": students})
+    return render(request, 'invigilator/invigilatorSeatarrangement.html', {"students": students})
 
 
-def invigilatorProfile(request):
-    return render(request,"invigilator/invigilatorProfile.html")
+
+
+
 
 from django.contrib.auth.decorators import login_required
 from django.shortcuts import render
@@ -814,21 +853,25 @@ def invigilatorProfile(request):
         upcoming_invigilations.sort(key=lambda x: (x['date'], x['time']))
 
     context = {
+        "user": user, 
         "invigilator": {
             "invigilator_id": user.id,
             "full_name": user.name,
-            "department": user.department.name if user.department else "N/A",
+            "department": user.invigilator_department if user.invigilator_department else "N/A",
             "room_allotted": room.room_number if room else "-",
-            "next_exam": students.order_by('exam__session__date').first().exam.subject_name if students else "-"
+            "next_exam": students.order_by('exam__session__date').first().exam.subject_name if students else "-",
+            
         },
         "upcoming_invigilations": upcoming_invigilations
     }
 
     return render(request, "invigilator/invigilatorProfile.html", context)
 
+
 from django.shortcuts import render, redirect
 from django.contrib import messages
 from .models import CustomUser, Course, Department
+from django.core.files.storage import default_storage
 
 def signup(request):
     if request.method == "POST":
@@ -851,7 +894,7 @@ def signup(request):
             course_obj = Course.objects.get(id=course_id)
             dept_obj = Department.objects.get(id=department_id)
 
-            # Create student user
+            # ✅ Create student user
             user = CustomUser.objects.create_user(
                 username=roll_number,
                 name=name,
@@ -865,19 +908,21 @@ def signup(request):
         elif role == "invigilator":
             employee_id = request.POST.get("employee_id")
             inv_department = request.POST.get("department_name")
+            profile_picture = request.FILES.get("profile_picture")  # ✅ Handle file upload
 
             # Prevent duplicate employee IDs
             if CustomUser.objects.filter(username=employee_id).exists():
                 messages.error(request, "Employee ID already registered.")
                 return redirect("signup")
 
-            # Create invigilator user
+            # ✅ Create invigilator user
             user = CustomUser.objects.create_user(
                 username=employee_id,
                 name=name,
                 role="invigilator",
                 employee_id=employee_id,
                 invigilator_department=inv_department,
+                profile_picture=profile_picture,  # save uploaded image
                 password=password,
             )
         else:
@@ -894,6 +939,40 @@ def signup(request):
         "courses": courses,
         "departments": departments,
     })
+
+
+from django.contrib.auth.decorators import login_required
+from django.shortcuts import render, redirect
+from django.contrib import messages
+
+@login_required
+def edit_invigilator_profile(request):
+    user = request.user
+
+    # Only invigilators can access
+    if getattr(user, "role", None) != "invigilator":
+        return redirect("login")
+
+    if request.method == "POST":
+        name = request.POST.get("name")
+        department = request.POST.get("department")
+        profile_picture = request.FILES.get("profile_picture")
+
+        if name:
+            user.name = name
+        if department:
+            user.invigilator_department = department
+        if profile_picture:
+            user.profile_picture = profile_picture
+
+        user.save()
+        messages.success(request, "Profile updated successfully!")
+        return redirect("invigilatorprofile")
+
+    return render(request, "invigilator/editProfile.html", {
+        "user": user,
+    })
+
 
 
 def invigilator_management(request):

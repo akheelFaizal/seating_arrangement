@@ -61,9 +61,10 @@ urlpatterns = [
 
         #invigilator 
         path("invigilator/invigilatorOverview",views.invigilator_dashboard,name="invigilatordashboard"),
-        path("invigilator/seatarrangement",views.invigilatorSeatarrangement),
+        path("invigilator/seatarrangement",views.invigilatorSeatarrangement,name="invigilatorseatarrangement"),
         path("invigilator/profile",views.invigilatorProfile,name="invigilatorprofile"),
         # path("invigilator/signup",views.invigilator_signup,name="invigilatorsignup")
+         path('invigilator/profile/edit/', views.edit_invigilator_profile, name='edit_invigilator_profile'),
 
 
 

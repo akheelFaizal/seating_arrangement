@@ -23,12 +23,12 @@ class CustomUserAdmin(UserAdmin):
     # Add custom fields to the default fieldsets
     fieldsets = UserAdmin.fieldsets + (
         ("Academic info", {"fields": ("course", "department", "year")}),
-        ("Invigilator info", {"fields": ("role", "employee_id", "invigilator_department")}),
+        ("Invigilator info", {"fields": ("role", "employee_id", "invigilator_department", "profile_picture")}),
     )
 
     add_fieldsets = UserAdmin.add_fieldsets + (
         ("Academic info", {"fields": ("course", "department", "year")}),
-        ("Invigilator info", {"fields": ("role", "employee_id", "invigilator_department")}),
+        ("Invigilator info", {"fields": ("role", "employee_id", "invigilator_department", "profile_picture")}),
     )
 
 
