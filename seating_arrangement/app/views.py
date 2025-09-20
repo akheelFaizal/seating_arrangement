@@ -15,48 +15,6 @@ from django.utils.timezone import now
 
 from .models import *   
 
-#student functions
-
-def signup(request):
-    if request.method == "POST":
-        roll_number = request.POST.get("roll_number")
-        name = request.POST.get("name")
-        course_id = request.POST.get("course")
-        department_id = request.POST.get("department")
-        year = request.POST.get("year")
-        password = request.POST.get("password")
-
-        # Prevent duplicate roll numbers
-        if CustomUser.objects.filter(roll_number=roll_number).exists():
-            messages.error(request, "Roll number already registered.")
-            return redirect("student_signup")
-
-        # Get related course and department
-        course_obj = Course.objects.get(id=course_id)
-        dept_obj = Department.objects.get(id=department_id)
-
-        # ✅ Create user (fill username with roll_number)
-        user = CustomUser.objects.create_user(
-            username=roll_number,      # important!
-            roll_number=roll_number,
-            name=name,
-            course=course_obj,
-            department=dept_obj,
-            year=year,
-            password=password,
-        )
-
-        messages.success(request, "Account created successfully. Please login.")
-        return redirect("login")
-
-    # For GET request, render the signup form
-    courses = Course.objects.all()
-    departments = Department.objects.all()
-    return render(request, "student/studentSignup.html", {
-        "courses": courses,
-        "departments": departments,
-    })
-
 
 def login_view(request):
     if request.method == "POST":
@@ -92,48 +50,6 @@ def index(request):
       return render(request, 'admin/Admin.html')
 
 
-def StudentSignupAction(request):
-
-    if request.method == 'POST':
-        roll_number = request.POST.get('roll_number')
-        name = request.POST.get('name')
-        password_raw = request.POST.get('password')
-        department_id = request.POST.get('department')
-        course_id = request.POST.get('course')
-
-        # Check duplicate roll number
-        if Student.objects.filter(roll_number=roll_number).exists():
-            messages.error(request, "Roll number already exists.")
-            return redirect(StudentSignupAction)
-
-        # Hash the password (important for security)
-        password = make_password(password_raw)
-
-        try:
-            department = Department.objects.get(id=department_id)
-            course = Course.objects.get(id=course_id)
-        except (Department.DoesNotExist, Course.DoesNotExist):
-            messages.error(request, "Invalid department or course selected.")
-            return redirect(StudentSignupAction)
-
-        student = Student(
-            roll_number=roll_number,
-            name=name,
-            password=password,
-            department=department,
-            course=course
-        )
-        student.save()
-        messages.success(request, "Signup successful! Please login.")
-        return redirect("login")
-
-    # For GET, show signup form with department and course options
-    departments = Department.objects.all()
-    courses = Course.objects.all()
-    return render(request, 'student/StudentSignup.html', {'departments': departments, 'courses': courses})
-
-
-
 @login_required
 def StudentOverView(request):
     # Get the student_id from session (CustomUser ID)
@@ -150,9 +66,9 @@ def StudentOverView(request):
 
     # Try to fetch matching Student record using roll_number
     student_data = None
-    if custom_user.roll_number:
+    if custom_user.username:
         try:
-            student_data = Student.objects.get(roll_number=custom_user.roll_number)
+            student_data = Student.objects.get(roll_number=custom_user.username)
         except Student.DoesNotExist:
             student_data = None
 
@@ -175,14 +91,14 @@ def StudentSeatview(request):
     # Fetch all seatings for this student
     seatings = (
         Seating.objects.filter(student=student)
-        .select_related("exam__session", "exam", "exam__department", "room")
-        .order_by("exam__session__date", "exam__session__start_time")
+        .select_related("exam_session", "exam", "exam_department", "room")
+        .order_by("exam_sessiondate", "examsession_start_time")
     )
 
     # Find the next upcoming exam
     next_exam = (
-        seatings.filter(exam__session__date__gte=date.today())
-        .order_by("exam__session__date", "exam__session__start_time")
+        seatings.filter(exam_sessiondate_gte=date.today())
+        .order_by("exam_sessiondate", "examsession_start_time")
         .first()
     )
 
@@ -203,6 +119,14 @@ def StudentSeatview(request):
     return render(request, "student/StudentSeatView.html", context)
 
 
+
+
+
+
+def StudentResultView(request):
+    return render(request, 'student/studentResultView.html')
+
+
 from django.shortcuts import render, get_object_or_404
 from django.utils.timezone import now
 from datetime import date
@@ -214,9 +138,9 @@ def StudentExamDetail(request):
 
     # Fetch seatings (exams for this student)
     seatings = (
-        Seating.objects.filter(student=student, exam__session__date__gte=date.today())
-        .select_related("exam__session", "exam", "exam__department", "room")
-        .order_by("exam__session__date", "exam__session__start_time")
+        Seating.objects.filter(student=student, exam_sessiondate_gte=date.today())
+        .select_related("exam_session", "exam", "exam_department", "room")
+        .order_by("exam_sessiondate", "examsession_start_time")
     )
 
     # Next upcoming exam
@@ -297,7 +221,7 @@ def SeatingArrangement(request):
     exams = Exam.objects.select_related('department', 'session').all().order_by('session__date')
 
     # Fetch all rooms
-    rooms = Room.objects.prefetch_related('seating_set__exam__session', 'seating_set__student').all()
+    rooms = Room.objects.prefetch_related('seating_set_examsession', 'seating_set_student').all()
 
     # Group exams by session date
     exams_by_date = defaultdict(list)
@@ -642,7 +566,7 @@ def room_management(request):
 
     # Attach seating queryset to each room
     for room in rooms:
-        room.seatings_for_date = Seating.objects.filter(room=room, exam__session__date=selected_date)
+        room.seatings_for_date = Seating.objects.filter(room=room, exam_session_date=selected_date)
 
     context = {
         "rooms": rooms,
@@ -755,15 +679,7 @@ def analytics(request):
 
     return render(request, "admin/Analytics.html", context)
 
-
-
-
-
-
 #invigilators
-
-
-from django.shortcuts import render
 
 def invigilator_dashboard(request):
     return render(request, 'invigilator/invigilatorOverview.html')
@@ -813,36 +729,46 @@ def invigilatorProfile(request):
     return render(request,"invigilator/invigilatorProfile.html")
 
 
+def signup(request):
+    if request.method == "POST":
+        roll_number = request.POST.get("roll_number")
+        name = request.POST.get("name")
+        course_id = request.POST.get("course")
+        department_id = request.POST.get("department")
+        year = request.POST.get("year")
+        password = request.POST.get("password")
 
-# from django.shortcuts import render, redirect
-# from django.contrib import messages
-# from django.contrib.auth import get_user_model
+        # Prevent duplicate roll numbers
+        if CustomUser.objects.filter(username=roll_number).exists():
+            messages.error(request, "Roll number already registered.")
+            return redirect("signup")
 
-# CustomUser = get_user_model()
+        # Get related course and department
+        course_obj = Course.objects.get(id=course_id)
+        dept_obj = Department.objects.get(id=department_id)
 
-# def invigilator_signup(request):
-#     if request.method == "POST":
-#         name = request.POST.get("name")
-#         email = request.POST.get("email")
-#         password1 = request.POST.get("password1")
-#         password2 = request.POST.get("password2")
+        # ✅ Create user (fill username with roll_number)
+        user = CustomUser.objects.create_user(
+            username=roll_number,
+            name=name,
+            course=course_obj,
+            department=dept_obj,
+            year=year,
+            password=password,
+        )
 
-#         # ✅ validations
-#         if not name or not email:
-#             messages.error(request, "All fields are required.")
-#         elif password1 != password2:
-#             messages.error(request, "Passwords do not match.")
-        
-#         else:
-#             # ✅ create invigilator user
-#             user = CustomUser.objects.create_user(
-            
-#                 name=name,
-#                 email=email,
-#                 password=password1,
-#                 role="invigilator"  # 👈 set role automatically
-#             )
-#             messages.success(request, "Invigilator account created successfully!")
-#             return redirect("login")
+        messages.success(request, "Account created successfully. Please login.")
+        return redirect("login")
 
-#     return render(request, "invigilator/invigilatorsignup.html")
+    # For GET request, render the signup form
+    courses = Course.objects.all()
+    departments = Department.objects.all()
+    return render(request, "student/studentSignup.html", {
+        "courses": courses,
+        "departments": departments,
+    })
+
+
+# def invigilator_management(request):
+    
+#     return render(request, "admin/InvigilatorManagement.html")
