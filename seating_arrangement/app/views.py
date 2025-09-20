@@ -17,7 +17,7 @@ from .models import *
 
 #student functions
 
-def student_signup(request):
+def signup(request):
     if request.method == "POST":
         roll_number = request.POST.get("roll_number")
         name = request.POST.get("name")
@@ -814,35 +814,35 @@ def invigilatorProfile(request):
 
 
 
-from django.shortcuts import render, redirect
-from django.contrib import messages
-from django.contrib.auth import get_user_model
+# from django.shortcuts import render, redirect
+# from django.contrib import messages
+# from django.contrib.auth import get_user_model
 
-CustomUser = get_user_model()
+# CustomUser = get_user_model()
 
-def invigilator_signup(request):
-    if request.method == "POST":
-        name = request.POST.get("name")
-        email = request.POST.get("email")
-        password1 = request.POST.get("password1")
-        password2 = request.POST.get("password2")
+# def invigilator_signup(request):
+#     if request.method == "POST":
+#         name = request.POST.get("name")
+#         email = request.POST.get("email")
+#         password1 = request.POST.get("password1")
+#         password2 = request.POST.get("password2")
 
-        # ✅ validations
-        if not name or not email:
-            messages.error(request, "All fields are required.")
-        elif password1 != password2:
-            messages.error(request, "Passwords do not match.")
+#         # ✅ validations
+#         if not name or not email:
+#             messages.error(request, "All fields are required.")
+#         elif password1 != password2:
+#             messages.error(request, "Passwords do not match.")
         
-        else:
-            # ✅ create invigilator user
-            user = CustomUser.objects.create_user(
+#         else:
+#             # ✅ create invigilator user
+#             user = CustomUser.objects.create_user(
             
-                name=name,
-                email=email,
-                password=password1,
-                role="invigilator"  # 👈 set role automatically
-            )
-            messages.success(request, "Invigilator account created successfully!")
-            return redirect("login")
+#                 name=name,
+#                 email=email,
+#                 password=password1,
+#                 role="invigilator"  # 👈 set role automatically
+#             )
+#             messages.success(request, "Invigilator account created successfully!")
+#             return redirect("login")
 
-    return render(request, "invigilator/invigilatorsignup.html")
+#     return render(request, "invigilator/invigilatorsignup.html")

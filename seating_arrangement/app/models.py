@@ -26,6 +26,7 @@ class Course(models.Model):
 
 
 class CustomUser(AbstractUser):
+
     # Role field to differentiate between Student, Invigilator, Admin
     ROLE_CHOICES = (
         ("student", "Student"),
@@ -39,16 +40,24 @@ class CustomUser(AbstractUser):
     name = models.CharField(max_length=100, blank=True, null=True)
     course = models.ForeignKey(Course, on_delete=models.CASCADE, blank=True, null=True)
     department = models.ForeignKey(Department, on_delete=models.CASCADE, blank=True, null=True)
+    # roll number will be stored in "username" field itself
+    name = models.CharField(max_length=100, blank=True, null=True)
+    course = models.ForeignKey("Course", on_delete=models.CASCADE, blank=True, null=True)
+    department = models.ForeignKey("Department", on_delete=models.CASCADE, blank=True, null=True)
+
     year = models.PositiveIntegerField(
-        choices=[(1, "1st Year"), (2, "2nd Year"), (3, "3rd Year"), (4, "4th Year")]
+        choices=[(1, "1st Year"), (2, "2nd Year"), (3, "3rd Year"), (4, "4th Year")],
+        blank=True, null=True
     )
+
 
     # Authentication uses roll_number
     USERNAME_FIELD = "roll_number"
     REQUIRED_FIELDS = ["name", "course", "department", "year"]
 
+
     def __str__(self):
-        return f"{self.name or self.roll_number} ({self.role})"
+        return self.username
 
 
 
