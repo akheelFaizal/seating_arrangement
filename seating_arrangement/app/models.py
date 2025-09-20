@@ -135,3 +135,14 @@ class NewsUpdate(models.Model):
 
     def _str_(self):
         return self.title
+    
+class Debarring(models.Model):
+    student = models.ForeignKey('Student', on_delete=models.CASCADE)
+    invigilator = models.ForeignKey('Invigilator', on_delete=models.CASCADE)
+    room = models.ForeignKey('Room', on_delete=models.CASCADE)
+    seat = models.ForeignKey('Seating', on_delete=models.SET_NULL, blank=True, null=True)
+    reason = models.CharField(max_length=255, blank=True, null=True)  # optional reason
+    timestamp = models.DateTimeField(auto_now_add=True)  # when the debar happened
+
+    def __str__(self):
+        return f"{self.student.roll_number} debarred by {self.invigilator.name} in {self.room.room_number}"
