@@ -23,7 +23,7 @@ class CustomUserAdmin(UserAdmin):
 
     add_fieldsets = UserAdmin.add_fieldsets + (
         ("Academic info", {"fields": ("name", "course", "department", "year")}),
-)
+    )
 
 
 #student info
@@ -80,6 +80,6 @@ class RoomAdmin(admin.ModelAdmin):
 class SeatingAdmin(admin.ModelAdmin):
     list_display = ['id', 'student', 'exam', 'room', 'seat_number']
     list_filter = ['exam', 'room']
-    search_fields = ['student__name', 'student__roll_number', 'exam__subject_name']
+    search_fields = ['student_name', 'studentroll_number', 'exam_subject_name']
 
 admin.site.register(ExamSession)

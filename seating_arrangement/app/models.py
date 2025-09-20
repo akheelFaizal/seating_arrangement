@@ -14,51 +14,29 @@ from django.contrib.auth.hashers import make_password
 class Department(models.Model):
     name = models.CharField(max_length=100)
 
-    def __str__(self):
+    def _str_(self):
         return self.name
 
 class Course(models.Model):
     name = models.CharField(max_length=100)
     department = models.ForeignKey(Department, on_delete=models.CASCADE)
     
-    def __str__(self):
+    def _str_(self):
         return self.name
 
 
 class CustomUser(AbstractUser):
-
-    # Role field to differentiate between Student, Invigilator, Admin
-    ROLE_CHOICES = (
-        ("student", "Student"),
-        ("invigilator", "Invigilator"),
-        ("admin", "Admin"),
-    )
-    role = models.CharField(max_length=20, choices=ROLE_CHOICES, default="student")
-
-    # Existing fields (unchanged)
-    roll_number = models.CharField(max_length=20, unique=True, blank=True, null=True)
-    name = models.CharField(max_length=100, blank=True, null=True)
-    course = models.ForeignKey(Course, on_delete=models.CASCADE, blank=True, null=True)
-    department = models.ForeignKey(Department, on_delete=models.CASCADE, blank=True, null=True)
     # roll number will be stored in "username" field itself
     name = models.CharField(max_length=100, blank=True, null=True)
     course = models.ForeignKey("Course", on_delete=models.CASCADE, blank=True, null=True)
     department = models.ForeignKey("Department", on_delete=models.CASCADE, blank=True, null=True)
-
     year = models.PositiveIntegerField(
         choices=[(1, "1st Year"), (2, "2nd Year"), (3, "3rd Year"), (4, "4th Year")],
         blank=True, null=True
     )
 
-
-    # Authentication uses roll_number
-    USERNAME_FIELD = "roll_number"
-    REQUIRED_FIELDS = ["name", "course", "department", "year"]
-
-
-    def __str__(self):
+    def _str_(self):
         return self.username
-
 
 
 
@@ -73,7 +51,7 @@ class Student(models.Model):
         default=1
     )
 
-    def __str__(self):
+    def _str_(self):
         return f"{self.name} ({self.roll_number})"
     
 
@@ -84,7 +62,7 @@ class Invigilator(models.Model):
     phone = models.CharField(max_length=15, blank=True)
     email = models.EmailField(unique=True)
 
-    def __str__(self):
+    def _str_(self):
         return self.name
 
 
@@ -96,7 +74,7 @@ class ExamSession(models.Model):
     start_time = models.TimeField()
     end_time = models.TimeField()
 
-    def __str__(self):
+    def _str_(self):
         return f"{self.date} {self.start_time}-{self.end_time}"
 
 
@@ -106,7 +84,7 @@ class Exam(models.Model):
     department = models.ForeignKey(Department, on_delete=models.CASCADE)
     session = models.ForeignKey(ExamSession, on_delete=models.CASCADE, related_name="exams", default=1)
 
-    def __str__(self):
+    def _str_(self):
         return self.subject_name
 
 
@@ -130,7 +108,7 @@ class Room(models.Model):
     rows = models.PositiveIntegerField(default=5, validators=[MinValueValidator(1)])
     columns = models.PositiveIntegerField(default=2, validators=[MinValueValidator(1)])
     
-    def __str__(self):
+    def _str_(self):
         return self.room_number
 
 
@@ -154,5 +132,5 @@ class NewsUpdate(models.Model):
     status = models.CharField(max_length=10, choices=STATUS_CHOICES, default='pending')
     created_at = models.DateTimeField(default=timezone.now)
 
-    def __str__(self):
+    def _str_(self):
         return self.title
