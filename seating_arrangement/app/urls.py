@@ -10,7 +10,6 @@ urlpatterns = [
         path("student/logout/", views.logout_view, name="logout"),
         path('student/overview/', views.StudentOverView, name='student_overview'),
         path('student/seatview/', views.StudentSeatview, name='student_seatview'),
-        path('student/resultview/', views.StudentResultView, name='student_resultview'),
         path('student/examdetail/', views.StudentExamDetail, name='student_examdetail'),
         path('student/signupaction',views.StudentSignupAction),
         path("student/signup/",views.student_signup, name="signup"),
@@ -60,7 +59,9 @@ urlpatterns = [
         #invigilator 
         path("invigilator/invigilatorOverview",views.invigilator_dashboard,name="invigilatordashboard"),
         path("invigilator/seatarrangement",views.invigilatorSeatarrangement),
-        path("invigilator/profile",views.invigilatorProfile,name="invigilatorprofile")
+        path("invigilator/profile",views.invigilatorProfile,name="invigilatorprofile"),
+        path("invigilator/signup",views.invigilator_signup,name="invigilatorsignup")
+
 
 
         # login and logout

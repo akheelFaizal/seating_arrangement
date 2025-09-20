@@ -26,22 +26,30 @@ class Course(models.Model):
 
 
 class CustomUser(AbstractUser):
-    # You can add extra fields if needed
+    # Role field to differentiate between Student, Invigilator, Admin
+    ROLE_CHOICES = (
+        ("student", "Student"),
+        ("invigilator", "Invigilator"),
+        ("admin", "Admin"),
+    )
+    role = models.CharField(max_length=20, choices=ROLE_CHOICES, default="student")
 
-    roll_number = models.CharField(max_length=20, unique=True,blank=True,null=True)
-    name = models.CharField(max_length=100,blank=True,null=True)
-    course = models.ForeignKey(Course, on_delete=models.CASCADE,blank=True,null=True)
-    department = models.ForeignKey(Department, on_delete=models.CASCADE,blank=True,null=True)
+    # Existing fields (unchanged)
+    roll_number = models.CharField(max_length=20, unique=True, blank=True, null=True)
+    name = models.CharField(max_length=100, blank=True, null=True)
+    course = models.ForeignKey(Course, on_delete=models.CASCADE, blank=True, null=True)
+    department = models.ForeignKey(Department, on_delete=models.CASCADE, blank=True, null=True)
     year = models.PositiveIntegerField(
         choices=[(1, "1st Year"), (2, "2nd Year"), (3, "3rd Year"), (4, "4th Year")]
     )
 
-    # Tell Django to use roll_number instead of username
+    # Authentication uses roll_number
     USERNAME_FIELD = "roll_number"
     REQUIRED_FIELDS = ["name", "course", "department", "year"]
 
     def __str__(self):
-            return self.username
+        return f"{self.name or self.roll_number} ({self.role})"
+
 
 
 

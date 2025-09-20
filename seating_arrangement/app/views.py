@@ -15,6 +15,48 @@ from django.utils.timezone import now
 
 from .models import *   
 
+#student functions
+
+def student_signup(request):
+    if request.method == "POST":
+        roll_number = request.POST.get("roll_number")
+        name = request.POST.get("name")
+        course_id = request.POST.get("course")
+        department_id = request.POST.get("department")
+        year = request.POST.get("year")
+        password = request.POST.get("password")
+
+        # Prevent duplicate roll numbers
+        if CustomUser.objects.filter(roll_number=roll_number).exists():
+            messages.error(request, "Roll number already registered.")
+            return redirect("student_signup")
+
+        # Get related course and department
+        course_obj = Course.objects.get(id=course_id)
+        dept_obj = Department.objects.get(id=department_id)
+
+        # ✅ Create user (fill username with roll_number)
+        user = CustomUser.objects.create_user(
+            username=roll_number,      # important!
+            roll_number=roll_number,
+            name=name,
+            course=course_obj,
+            department=dept_obj,
+            year=year,
+            password=password,
+        )
+
+        messages.success(request, "Account created successfully. Please login.")
+        return redirect("login")
+
+    # For GET request, render the signup form
+    courses = Course.objects.all()
+    departments = Department.objects.all()
+    return render(request, "student/studentSignup.html", {
+        "courses": courses,
+        "departments": departments,
+    })
+
 
 def login_view(request):
     if request.method == "POST":
@@ -48,8 +90,6 @@ def logout_view(request):
 
 def index(request):
       return render(request, 'admin/Admin.html')
-
-#student
 
 
 def StudentSignupAction(request):
@@ -85,7 +125,7 @@ def StudentSignupAction(request):
         )
         student.save()
         messages.success(request, "Signup successful! Please login.")
-        return redirect(StudentLogin)
+        return redirect("login")
 
     # For GET, show signup form with department and course options
     departments = Department.objects.all()
@@ -161,14 +201,6 @@ def StudentSeatview(request):
         "hall_ticket_url": "#",  # Replace with actual hall ticket link if available
     }
     return render(request, "student/StudentSeatView.html", context)
-
-
-
-
-
-
-def StudentResultView(request):
-    return render(request, 'student/studentResultView.html')
 
 
 from django.shortcuts import render, get_object_or_404
@@ -782,76 +814,35 @@ def invigilatorProfile(request):
 
 
 
-
-
-
-# # users/views.py
-# from django.contrib.auth import get_user_model
-# from django.contrib.auth.forms import UserCreationForm
-# from django.contrib.auth import login
-# from django.shortcuts import render, redirect
-
-# User = get_user_model()
-
-# # Inline form class (can be moved to forms.py later)
-# class CustomUserCreationForm(UserCreationForm):
-#     class Meta:
-#         model = User
-#         fields = (
-#             "roll_number", "name", "email", "course", "department", "year",
-#             "password1", "password2"
-#         )
-
-# def signup(request):
-#     if request.method == "POST":
-#         form = CustomUserCreationForm(request.POST)
-#         if form.is_valid():
-#             user = form.save()
-#             login(request, user)  # optional auto-login after signup
-#             return redirect("student_overview")
-#     else:
-#         form = CustomUserCreationForm()
-#     return render(request, "student/signup.html", {"form": form})
 from django.shortcuts import render, redirect
 from django.contrib import messages
-from .models import CustomUser, Course, Department
+from django.contrib.auth import get_user_model
 
-def student_signup(request):
+CustomUser = get_user_model()
+
+def invigilator_signup(request):
     if request.method == "POST":
-        roll_number = request.POST.get("roll_number")
         name = request.POST.get("name")
-        course_id = request.POST.get("course")
-        department_id = request.POST.get("department")
-        year = request.POST.get("year")
-        password = request.POST.get("password")
+        email = request.POST.get("email")
+        password1 = request.POST.get("password1")
+        password2 = request.POST.get("password2")
 
-        # Prevent duplicate roll numbers
-        if CustomUser.objects.filter(roll_number=roll_number).exists():
-            messages.error(request, "Roll number already registered.")
-            return redirect("student_signup")
+        # ✅ validations
+        if not name or not email:
+            messages.error(request, "All fields are required.")
+        elif password1 != password2:
+            messages.error(request, "Passwords do not match.")
+        
+        else:
+            # ✅ create invigilator user
+            user = CustomUser.objects.create_user(
+            
+                name=name,
+                email=email,
+                password=password1,
+                role="invigilator"  # 👈 set role automatically
+            )
+            messages.success(request, "Invigilator account created successfully!")
+            return redirect("login")
 
-        # Get related course and department
-        course_obj = Course.objects.get(id=course_id)
-        dept_obj = Department.objects.get(id=department_id)
-
-        # ✅ Create user (fill username with roll_number)
-        user = CustomUser.objects.create_user(
-            username=roll_number,      # important!
-            roll_number=roll_number,
-            name=name,
-            course=course_obj,
-            department=dept_obj,
-            year=year,
-            password=password,
-        )
-
-        messages.success(request, "Account created successfully. Please login.")
-        return redirect("login")
-
-    # For GET request, render the signup form
-    courses = Course.objects.all()
-    departments = Department.objects.all()
-    return render(request, "student/studentSignup.html", {
-        "courses": courses,
-        "departments": departments,
-    })
+    return render(request, "invigilator/invigilatorsignup.html")

@@ -13,13 +13,15 @@ from .models import CustomUser
 @admin.register(CustomUser)
 class CustomUserAdmin(UserAdmin):
     ordering = ("roll_number",)
-    list_display = ("roll_number", "name", "email", "course", "department", "year", "is_staff")
+    list_display = ("roll_number", "name", "email", "role", "course", "department", "year", "is_staff")
+    list_filter = ("role", "department", "course", "is_staff")
     search_fields = ("roll_number", "name", "email")
 
     fieldsets = (
         (None, {"fields": ("roll_number", "password")}),
         ("Personal info", {"fields": ("name", "email")}),
         ("Academic", {"fields": ("course", "department", "year")}),
+        ("Role", {"fields": ("role",)}),  # 👈 added role here
         ("Permissions", {"fields": ("is_active", "is_staff", "is_superuser", "groups", "user_permissions")}),
         ("Important dates", {"fields": ("last_login", "date_joined")}),
     )
@@ -27,9 +29,10 @@ class CustomUserAdmin(UserAdmin):
     add_fieldsets = (
         (None, {
             "classes": ("wide",),
-            "fields": ("roll_number", "name", "email", "course", "department", "year", "password1", "password2"),
+            "fields": ("roll_number", "name", "email", "course", "department", "year", "role", "password1", "password2"),
         }),
     )
+
 
 
 #student info
