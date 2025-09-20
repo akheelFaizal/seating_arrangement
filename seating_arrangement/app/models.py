@@ -25,8 +25,9 @@ class Course(models.Model):
         return self.name
 
 
+
 class CustomUser(AbstractUser):
-    # roll number will be stored in "username" field itself
+    # username will be roll_number for students or employee_id for invigilators
     name = models.CharField(max_length=100, blank=True, null=True)
     course = models.ForeignKey("Course", on_delete=models.CASCADE, blank=True, null=True)
     department = models.ForeignKey("Department", on_delete=models.CASCADE, blank=True, null=True)
@@ -34,9 +35,20 @@ class CustomUser(AbstractUser):
         choices=[(1, "1st Year"), (2, "2nd Year"), (3, "3rd Year"), (4, "4th Year")],
         blank=True, null=True
     )
+    
+    # New fields for invigilator support
+    ROLE_CHOICES = (
+        ("student", "Student"),
+        ("invigilator", "Invigilator"),
+    )
+    role = models.CharField(max_length=20, choices=ROLE_CHOICES, default="student")
+    # For invigilators
+    employee_id = models.CharField(max_length=50, blank=True, null=True)
+    invigilator_department = models.CharField(max_length=100, blank=True, null=True)
 
-    def _str_(self):
-        return self.username
+    def __str__(self):
+        return f"{self.name or self.username} ({self.role})"
+
 
 
 
@@ -93,7 +105,7 @@ class Exam(models.Model):
 class Room(models.Model):
     room_number = models.CharField(max_length=20, unique=True)
     capacity = models.PositiveIntegerField()
-    supervisor = models.ForeignKey('Invigilator', on_delete=models.SET_NULL, null=True, blank=True)
+    supervisor = models.ForeignKey('CustomUser', on_delete=models.SET_NULL, null=True, blank=True)
     STATUS_CHOICES = [
         ('active', 'Active'),
         ('inactive', 'Inactive'),

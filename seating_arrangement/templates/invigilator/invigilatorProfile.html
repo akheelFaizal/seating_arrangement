@@ -48,7 +48,7 @@
 
       <div class="container-fluid py-4">
 
-        <!-- KPI Cards (reuse your Card.html component) -->
+        <!-- KPI Cards -->
         <div class="row g-3 mb-1">
           <div class="col-12 col-sm-6 col-lg-3">
             {% include 'components/Card.html' with title="Invigilator ID" value=invigilator.invigilator_id icon="bi-person-badge" color_start="#3b82f6" color_end="#2563eb" %}
@@ -57,38 +57,38 @@
             {% include 'components/Card.html' with title="Name" value=invigilator.full_name icon="bi-person-fill" color_start="#22c55e" color_end="#16a34a" %}
           </div>
           <div class="col-12 col-sm-6 col-lg-3">
-            {% include 'components/Card.html' with title="Allotted Room" value=invigilator.room_allotted|default:"-" icon="bi-door-open" color_start="#f97316" color_end="#ea580c" %}
+            {% include 'components/Card.html' with title="Allotted Room" value=invigilator.room_allotted icon="bi-door-open" color_start="#f97316" color_end="#ea580c" %}
           </div>
           <div class="col-12 col-sm-6 col-lg-3">
-            {% include 'components/Card.html' with title="Next Exam" value=invigilator.next_exam|default:"-" icon="bi-calendar-event" color_start="#a855f7" color_end="#7e22ce" %}
+            {% include 'components/Card.html' with title="Next Exam" value=invigilator.next_exam icon="bi-calendar-event" color_start="#a855f7" color_end="#7e22ce" %}
           </div>
         </div>
 
-        <!-- Profile summary -->
+        <!-- Profile Summary -->
         <div class="glass-bg">
           <div class="d-flex align-items-center gap-3">
-            <img class="avatar" src="" alt="Avatar">
+            <img class="avatar" src="{% static 'images/default-avatar.png' %}" alt="Avatar">
             <div>
-              <h5 class="mb-1">Joseph Deril</h5>
+              <h5 class="mb-1">{{ invigilator.full_name }}</h5>
               <div class="text-muted">
-                ID: {{ invigilator.invigilator_id }} • {{ invigilator.department|default:"Department N/A" }}
+                ID: {{ invigilator.invigilator_id }} • {{ invigilator.department }}
               </div>
             </div>
           </div>
         </div>
 
-        <!-- Contact & details -->
+        <!-- Contact & Details -->
         <div class="glass-bg">
           <h5 class="fw-bold mb-3 text-secondary">Profile Details</h5>
           <div class="row">
             <div class="col-md-6">
-              <div class="info-list-item"><strong>Email:</strong></div>
-              <div class="info-list-item"><strong>Phone:</strong></div>
-              <div class="info-list-item"><strong>Department:</strong></div>
+              <div class="info-list-item"><strong>Email:</strong> {{ user.email|default:"N/A" }}</div>
+              <div class="info-list-item"><strong>Phone:</strong> {{ user.phone|default:"N/A" }}</div>
+              <div class="info-list-item"><strong>Department:</strong> {{ CustomUser.department }}</div>
             </div>
             <div class="col-md-6">
-              <div class="info-list-item"><strong>Allotted Room:</strong> </div>
-              <div class="info-list-item"><strong>Next Exam:</strong> </div>
+              <div class="info-list-item"><strong>Allotted Room:</strong> {{ CustomUser.room_allotted }}</div>
+              <div class="info-list-item"><strong>Next Exam:</strong> {{ CustomUser.next_exam }}</div>
             </div>
           </div>
           <div class="mt-3">
@@ -101,7 +101,7 @@
           </div>
         </div>
 
-        <!-- Upcoming invigilations -->
+        <!-- Upcoming Invigilations -->
         <div class="glass-bg">
           <h5 class="fw-bold mb-3 text-secondary">
             <i class="bi bi-bell-fill me-2 text-warning"></i> Upcoming Invigilations
@@ -126,7 +126,7 @@
                 </tr>
                 {% empty %}
                 <tr>
-                  <td colspan="4" class="text-muted">No upcoming invigilations scheduled.</td>
+                  <td colspan="4" class="text-muted text-center">No upcoming invigilations scheduled.</td>
                 </tr>
                 {% endfor %}
               </tbody>
@@ -134,8 +134,8 @@
           </div>
         </div>
 
-      </div> <!-- /container-fluid -->
-    </div> <!-- /mainContent -->
+      </div> <!-- container-fluid -->
+    </div> <!-- mainContent -->
 
   </div>
 </div>

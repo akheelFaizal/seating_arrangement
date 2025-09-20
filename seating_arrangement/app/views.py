@@ -16,24 +16,35 @@ from django.utils.timezone import now
 from .models import *   
 
 
+from django.shortcuts import render, redirect
+from django.contrib.auth import authenticate, login
+from django.contrib import messages
+from .models import CustomUser
+
 def login_view(request):
     if request.method == "POST":
-        rollnumber = request.POST.get("rollnumber")
+        username = request.POST.get("username")  # roll number or employee ID
         password = request.POST.get("password")
 
-        user = authenticate(request, username=rollnumber, password=password)  # uses custom backend
+        user = authenticate(request, username=username, password=password)  # uses custom backend
     
         if user is not None:
             login(request, user)
 
-            # Save CustomUser.id (student id) in session
-            request.session['student_id'] = user.id  
+            # Save user info in session
+            request.session['user_id'] = user.id
+            request.session['role'] = user.role
 
-            return redirect("student_overview")
+            # Redirect based on role
+            if user.role == "student":
+                return redirect("student_overview")  # your student dashboard
+            elif user.role == "invigilator":
+                return redirect("invigilatordashboard")  # your invigilator dashboard
         else:
-            messages.error(request, "Invalid roll number or password")
+            messages.error(request, "Invalid username or password")
 
     return render(request, "student/studentLogin.html")
+
 
 
 
@@ -86,19 +97,19 @@ from .models import Student, Seating
 @login_required
 def StudentSeatview(request):
     # Get the logged-in student based on roll number
-    student = get_object_or_404(Student, roll_number=request.user.roll_number)
+    student = get_object_or_404(Student, roll_number=request.user.username)
 
     # Fetch all seatings for this student
     seatings = (
-        Seating.objects.filter(student=student)
-        .select_related("exam_session", "exam", "exam_department", "room")
-        .order_by("exam_sessiondate", "examsession_start_time")
+    Seating.objects.filter(student=student)
+    .select_related("exam", "exam__session", "room")
+    .order_by("exam__session__date", "exam__session__start_time")
     )
 
-    # Find the next upcoming exam
+    # Next upcoming exam
     next_exam = (
-        seatings.filter(exam_sessiondate_gte=date.today())
-        .order_by("exam_sessiondate", "examsession_start_time")
+        seatings.filter(exam__session__date__gte=date.today())
+        .order_by("exam__session__date", "exam__session__start_time")
         .first()
     )
 
@@ -134,13 +145,13 @@ from .models import Student, Seating
 
 def StudentExamDetail(request):
     # Get logged-in student
-    student = get_object_or_404(Student, roll_number=request.user.roll_number)
+    student = get_object_or_404(Student, roll_number=request.user.username)
 
     # Fetch seatings (exams for this student)
     seatings = (
-        Seating.objects.filter(student=student, exam_sessiondate_gte=date.today())
-        .select_related("exam_session", "exam", "exam_department", "room")
-        .order_by("exam_sessiondate", "examsession_start_time")
+        Seating.objects.filter(student=student)
+        .select_related("exam", "exam__session", "room")
+        .order_by("exam__session__date", "exam__session__start_time")
     )
 
     # Next upcoming exam
@@ -681,8 +692,47 @@ def analytics(request):
 
 #invigilators
 
+from django.shortcuts import render, redirect
+from django.contrib.auth.decorators import login_required
+from .models import CustomUser
+
+from django.shortcuts import render, redirect
+from django.contrib.auth.decorators import login_required
+from .models import CustomUser, Seating, Exam, Room
+from django.contrib.auth.decorators import login_required
+from django.shortcuts import render, redirect
+from .models import Room, Seating
+
+@login_required
 def invigilator_dashboard(request):
-    return render(request, 'invigilator/invigilatorOverview.html')
+    user = request.user
+
+    # Only invigilators should access
+    if getattr(user, 'role', None) != "invigilator":
+        return redirect("login")  # or redirect to student dashboard
+
+    # Fetch assigned room(s) for this invigilator
+    assigned_rooms = Room.objects.filter(supervisor=user)
+    
+    # For simplicity, pick first room
+    room = assigned_rooms.first() if assigned_rooms.exists() else None
+
+    # Fetch students in that room
+    students = Seating.objects.filter(room=room).select_related('student', 'exam') if room else []
+
+    # Find next exam (nearest by date)
+    next_exam = None
+    if students:
+        next_exam = students.order_by('exam__session__date').first().exam
+
+    context = {
+        "user": user,
+        "room": room,
+        "students": students,
+        "next_exam": next_exam,
+    }
+
+    return render(request, 'invigilator/invigilatorOverview.html', context)
 
 
 def invigilatorSeatarrangement(request):
@@ -728,39 +778,112 @@ def invigilatorSeatarrangement(request):
 def invigilatorProfile(request):
     return render(request,"invigilator/invigilatorProfile.html")
 
+from django.contrib.auth.decorators import login_required
+from django.shortcuts import render
+from .models import Room, Seating, Exam
+
+@login_required
+def invigilatorProfile(request):
+    user = request.user
+
+    # Ensure only invigilators can access
+    if getattr(user, 'role', None) != "invigilator":
+        return redirect("login")  # or student dashboard
+
+    # Assigned room (if any)
+    room = Room.objects.filter(supervisor=user).first()
+
+    # Students in that room (optional)
+    students = Seating.objects.filter(room=room).select_related("student", "exam") if room else []
+
+    # Upcoming exams assigned to this invigilator (from Seating)
+    upcoming_invigilations = []
+    if students:
+        for seat in students:
+            upcoming_invigilations.append({
+                "date": seat.exam.session.date,
+                "time": seat.exam.session.start_time,
+                "subject": seat.exam.subject_name,
+                "room": seat.room.room_number
+            })
+        # Sort by date and time
+        upcoming_invigilations.sort(key=lambda x: (x['date'], x['time']))
+
+    context = {
+        "invigilator": {
+            "invigilator_id": user.id,
+            "full_name": user.name,
+            "department": user.department.name if user.department else "N/A",
+            "room_allotted": room.room_number if room else "-",
+            "next_exam": students.order_by('exam__session__date').first().exam.subject_name if students else "-"
+        },
+        "upcoming_invigilations": upcoming_invigilations
+    }
+
+    return render(request, "invigilator/invigilatorProfile.html", context)
+
+from django.shortcuts import render, redirect
+from django.contrib import messages
+from .models import CustomUser, Course, Department
 
 def signup(request):
     if request.method == "POST":
-        roll_number = request.POST.get("roll_number")
+        role = request.POST.get("role")  # student or invigilator
         name = request.POST.get("name")
-        course_id = request.POST.get("course")
-        department_id = request.POST.get("department")
-        year = request.POST.get("year")
         password = request.POST.get("password")
 
-        # Prevent duplicate roll numbers
-        if CustomUser.objects.filter(username=roll_number).exists():
-            messages.error(request, "Roll number already registered.")
+        if role == "student":
+            roll_number = request.POST.get("roll_number")
+            course_id = request.POST.get("course")
+            department_id = request.POST.get("department")
+            year = request.POST.get("year")
+
+            # Prevent duplicate roll numbers
+            if CustomUser.objects.filter(username=roll_number).exists():
+                messages.error(request, "Roll number already registered.")
+                return redirect("signup")
+
+            # Get related course and department
+            course_obj = Course.objects.get(id=course_id)
+            dept_obj = Department.objects.get(id=department_id)
+
+            # Create student user
+            user = CustomUser.objects.create_user(
+                username=roll_number,
+                name=name,
+                role="student",
+                course=course_obj,
+                department=dept_obj,
+                year=year,
+                password=password,
+            )
+
+        elif role == "invigilator":
+            employee_id = request.POST.get("employee_id")
+            inv_department = request.POST.get("department_name")
+
+            # Prevent duplicate employee IDs
+            if CustomUser.objects.filter(username=employee_id).exists():
+                messages.error(request, "Employee ID already registered.")
+                return redirect("signup")
+
+            # Create invigilator user
+            user = CustomUser.objects.create_user(
+                username=employee_id,
+                name=name,
+                role="invigilator",
+                employee_id=employee_id,
+                invigilator_department=inv_department,
+                password=password,
+            )
+        else:
+            messages.error(request, "Invalid role selected.")
             return redirect("signup")
-
-        # Get related course and department
-        course_obj = Course.objects.get(id=course_id)
-        dept_obj = Department.objects.get(id=department_id)
-
-        # ✅ Create user (fill username with roll_number)
-        user = CustomUser.objects.create_user(
-            username=roll_number,
-            name=name,
-            course=course_obj,
-            department=dept_obj,
-            year=year,
-            password=password,
-        )
 
         messages.success(request, "Account created successfully. Please login.")
         return redirect("login")
 
-    # For GET request, render the signup form
+    # GET request
     courses = Course.objects.all()
     departments = Department.objects.all()
     return render(request, "student/studentSignup.html", {

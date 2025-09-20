@@ -10,19 +10,25 @@ from django.contrib import admin
 from django.contrib.auth.admin import UserAdmin
 from .models import CustomUser
 
+
 @admin.register(CustomUser)
 class CustomUserAdmin(UserAdmin):
-    # show important fields in admin list
-    list_display = ("username", "name", "email", "course", "department", "year", "is_staff")
-    search_fields = ("username", "name", "email")
+    # Show important fields in admin list
+    list_display = (
+        "username", "name", "role", "course", "department", "year",
+        "employee_id", "invigilator_department", "is_staff"
+    )
+    search_fields = ("username", "name", "email", "employee_id")
 
-    # keep default fieldsets, just add our extras
+    # Add custom fields to the default fieldsets
     fieldsets = UserAdmin.fieldsets + (
-        ("Academic info", {"fields": ("name", "course", "department", "year")}),
+        ("Academic info", {"fields": ("course", "department", "year")}),
+        ("Invigilator info", {"fields": ("role", "employee_id", "invigilator_department")}),
     )
 
     add_fieldsets = UserAdmin.add_fieldsets + (
-        ("Academic info", {"fields": ("name", "course", "department", "year")}),
+        ("Academic info", {"fields": ("course", "department", "year")}),
+        ("Invigilator info", {"fields": ("role", "employee_id", "invigilator_department")}),
     )
 
 
