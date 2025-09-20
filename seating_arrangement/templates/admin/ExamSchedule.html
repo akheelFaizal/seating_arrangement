@@ -58,7 +58,6 @@
                         <th>Date</th>
                         <th>Start Time</th>
                         <th>End Time</th>
-                        <th>Status</th>
                         <th>Actions</th>
                       </tr>
                     </thead>
@@ -70,7 +69,6 @@
                         <td>{{ exam.session.date|date:"M d, Y" }}</td>
                         <td>{{ exam.session.start_time|time:"H:i" }}</td>
                         <td>{{ exam.session.end_time|time:"H:i" }}</td>
-                        <td><span class="badge bg-success">Scheduled</span></td>
                         <td>
                           <button class="btn btn-sm btn-outline-primary" data-bs-toggle="modal" data-bs-target="#editExamModal{{ exam.id }}">
                             <i class="bi bi-pencil"></i>
@@ -146,10 +144,14 @@
             {% endfor %}
           {% endfor %}
 
-          <!-- Add Exam Floating Button -->
-          <button class="btn btn-primary floating-btn" data-bs-toggle="modal" data-bs-target="#addExamModal">
-            <i class="bi bi-plus-lg me-1"></i> Add Exam
-          </button>
+          <div class="d-flex gap-2 position-fixed end-0 bottom-0 p-3">
+            <button class="btn btn-primary " data-bs-toggle="modal" data-bs-target="#addExamModal">
+              <i class="bi bi-plus-lg me-1"></i> Add Exam
+            </button>
+            <button class="btn btn-success " data-bs-toggle="modal" data-bs-target="#addExamSessionModal">
+              <i class="bi bi-plus-lg me-1"></i> Add Session
+            </button>
+          </div>
 
           <!-- Add Exam Modal -->
           <div class="modal fade" id="addExamModal" tabindex="-1" aria-labelledby="addExamModalLabel" aria-hidden="true">
@@ -200,6 +202,45 @@
             </div>
           </div>
 
+          <!-- Add Exam Session Modal -->
+          <div class="modal fade" id="addExamSessionModal" tabindex="-1" aria-labelledby="addExamSessionModalLabel" aria-hidden="true">
+            <div class="modal-dialog modal-dialog-centered">
+              <div class="modal-content">
+                <!-- Modal Header -->
+                <div class="modal-header">
+                  <h5 class="modal-title" id="addExamSessionModalLabel">Add Exam Session</h5>
+                  <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+
+                <!-- Modal Body -->
+                <div class="modal-body">
+                  <form id="addExamSessionForm" method="POST" action="{% url 'add_session' %}">
+                    {% csrf_token %}
+                    <div class="mb-3">
+                      <label for="sessionDate" class="form-label">Date</label>
+                      <input type="date" class="form-control" id="sessionDate" name="date" required>
+                    </div>
+
+                    <div class="mb-3">
+                      <label for="startTime" class="form-label">Start Time</label>
+                      <input type="time" class="form-control" id="startTime" name="start_time" required>
+                    </div>
+
+                    <div class="mb-3">
+                      <label for="endTime" class="form-label">End Time</label>
+                      <input type="time" class="form-control" id="endTime" name="end_time" required>
+                    </div>
+                  </form>
+                </div>
+
+                <!-- Modal Footer -->
+                <div class="modal-footer">
+                  <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                  <button type="submit" form="addExamSessionForm" class="btn btn-success">Add Session</button>
+                </div>
+              </div>
+            </div>
+          </div>  
         </div>
       </div>
     </div>

@@ -115,6 +115,7 @@ class Room(models.Model):
 #seating info
 class Seating(models.Model):
     student = models.ForeignKey(Student, on_delete=models.CASCADE)
+    examSession = models.ForeignKey(ExamSession, on_delete=models.CASCADE, blank=True, null=True)
     exam = models.ForeignKey(Exam, on_delete=models.CASCADE)
     room = models.ForeignKey(Room, on_delete=models.CASCADE)
     seat_number = models.PositiveIntegerField()

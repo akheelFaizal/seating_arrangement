@@ -57,6 +57,7 @@ urlpatterns = [
         path("rooms/delete/<int:pk>/", views.room_delete, name="room_delete"),
         path("news/approve/<int:pk>/", views.news_approve, name="news_approve"),
         path("news/reject/<int:pk>/", views.news_reject, name="news_reject"),
+        path("add/session/", views.add_session, name="add_session"),
 
         #invigilator 
         path("invigilator/invigilatorOverview",views.invigilator_dashboard,name="invigilatordashboard"),

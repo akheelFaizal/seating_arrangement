@@ -221,8 +221,12 @@ def SeatingArrangement(request):
     exams = Exam.objects.select_related('department', 'session').all().order_by('session__date')
 
     # Fetch all rooms
-    rooms = Room.objects.prefetch_related('seating_set_examsession', 'seating_set_student').all()
-
+    rooms = Room.objects.prefetch_related(
+        Prefetch(
+            'seating_set',  # reverse relation from Room → Seating
+            queryset=Seating.objects.select_related('student', 'examSession')
+        )
+    )
     # Group exams by session date
     exams_by_date = defaultdict(list)
     for exam in exams:
@@ -566,7 +570,7 @@ def room_management(request):
 
     # Attach seating queryset to each room
     for room in rooms:
-        room.seatings_for_date = Seating.objects.filter(room=room, exam_session_date=selected_date)
+        room.seatings_for_date = Seating.objects.filter(room=room, examSession__date=selected_date)
 
     context = {
         "rooms": rooms,
@@ -769,6 +773,24 @@ def signup(request):
     })
 
 
-# def invigilator_management(request):
+def invigilator_management(request):
     
-#     return render(request, "admin/InvigilatorManagement.html")
+    return render(request, "admin/InvigilatorManagement.html")
+
+
+def add_session(request):
+    if request.method == "POST":
+        date = request.POST.get('date')
+        start = request.POST.get('start_time')
+        end = request.POST.get('end_time')
+        if (date and start and end) :
+            ExamSession.objects.create(date=date, start_time=start, end_time=end)
+            messages.success(request, "Session created successfully.")
+            return redirect('exam_schedule')
+        messages.error(request, "Fill all the fields.")
+        return redirect('exam_schedule')
+
+        
+        
+
+        
