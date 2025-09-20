@@ -49,50 +49,6 @@ def logout_view(request):
 def index(request):
       return render(request, 'admin/Admin.html')
 
-#student
-
-
-def StudentSignupAction(request):
-
-    if request.method == 'POST':
-        roll_number = request.POST.get('roll_number')
-        name = request.POST.get('name')
-        password_raw = request.POST.get('password')
-        department_id = request.POST.get('department')
-        course_id = request.POST.get('course')
-
-        # Check duplicate roll number
-        if Student.objects.filter(roll_number=roll_number).exists():
-            messages.error(request, "Roll number already exists.")
-            return redirect(StudentSignupAction)
-
-        # Hash the password (important for security)
-        password = make_password(password_raw)
-
-        try:
-            department = Department.objects.get(id=department_id)
-            course = Course.objects.get(id=course_id)
-        except (Department.DoesNotExist, Course.DoesNotExist):
-            messages.error(request, "Invalid department or course selected.")
-            return redirect(StudentSignupAction)
-
-        student = Student(
-            roll_number=roll_number,
-            name=name,
-            password=password,
-            department=department,
-            course=course
-        )
-        student.save()
-        messages.success(request, "Signup successful! Please login.")
-        return redirect(StudentLogin)
-
-    # For GET, show signup form with department and course options
-    departments = Department.objects.all()
-    courses = Course.objects.all()
-    return render(request, 'student/StudentSignup.html', {'departments': departments, 'courses': courses})
-
-
 
 @login_required
 def StudentOverView(request):
@@ -110,9 +66,9 @@ def StudentOverView(request):
 
     # Try to fetch matching Student record using roll_number
     student_data = None
-    if custom_user.roll_number:
+    if custom_user.username:
         try:
-            student_data = Student.objects.get(roll_number=custom_user.roll_number)
+            student_data = Student.objects.get(roll_number=custom_user.username)
         except Student.DoesNotExist:
             student_data = None
 
@@ -723,15 +679,7 @@ def analytics(request):
 
     return render(request, "admin/Analytics.html", context)
 
-
-
-
-
-
 #invigilators
-
-
-from django.shortcuts import render
 
 def invigilator_dashboard(request):
     return render(request, 'invigilator/invigilatorOverview.html')
@@ -781,42 +729,7 @@ def invigilatorProfile(request):
     return render(request,"invigilator/invigilatorProfile.html")
 
 
-
-
-
-
-# # users/views.py
-# from django.contrib.auth import get_user_model
-# from django.contrib.auth.forms import UserCreationForm
-# from django.contrib.auth import login
-# from django.shortcuts import render, redirect
-
-# User = get_user_model()
-
-# # Inline form class (can be moved to forms.py later)
-# class CustomUserCreationForm(UserCreationForm):
-#     class Meta:
-#         model = User
-#         fields = (
-#             "roll_number", "name", "email", "course", "department", "year",
-#             "password1", "password2"
-#         )
-
-# def signup(request):
-#     if request.method == "POST":
-#         form = CustomUserCreationForm(request.POST)
-#         if form.is_valid():
-#             user = form.save()
-#             login(request, user)  # optional auto-login after signup
-#             return redirect("student_overview")
-#     else:
-#         form = CustomUserCreationForm()
-#     return render(request, "student/signup.html", {"form": form})
-from django.shortcuts import render, redirect
-from django.contrib import messages
-from .models import CustomUser, Course, Department
-
-def student_signup(request):
+def signup(request):
     if request.method == "POST":
         roll_number = request.POST.get("roll_number")
         name = request.POST.get("name")
@@ -826,9 +739,9 @@ def student_signup(request):
         password = request.POST.get("password")
 
         # Prevent duplicate roll numbers
-        if CustomUser.objects.filter(roll_number=roll_number).exists():
+        if CustomUser.objects.filter(username=roll_number).exists():
             messages.error(request, "Roll number already registered.")
-            return redirect("student_signup")
+            return redirect("signup")
 
         # Get related course and department
         course_obj = Course.objects.get(id=course_id)
@@ -836,8 +749,7 @@ def student_signup(request):
 
         # ✅ Create user (fill username with roll_number)
         user = CustomUser.objects.create_user(
-            username=roll_number,      # important!
-            roll_number=roll_number,
+            username=roll_number,
             name=name,
             course=course_obj,
             department=dept_obj,

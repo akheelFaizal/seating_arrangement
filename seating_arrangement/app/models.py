@@ -26,22 +26,17 @@ class Course(models.Model):
 
 
 class CustomUser(AbstractUser):
-    # You can add extra fields if needed
-
-    roll_number = models.CharField(max_length=20, unique=True,blank=True,null=True)
-    name = models.CharField(max_length=100,blank=True,null=True)
-    course = models.ForeignKey(Course, on_delete=models.CASCADE,blank=True,null=True)
-    department = models.ForeignKey(Department, on_delete=models.CASCADE,blank=True,null=True)
+    # roll number will be stored in "username" field itself
+    name = models.CharField(max_length=100, blank=True, null=True)
+    course = models.ForeignKey("Course", on_delete=models.CASCADE, blank=True, null=True)
+    department = models.ForeignKey("Department", on_delete=models.CASCADE, blank=True, null=True)
     year = models.PositiveIntegerField(
-        choices=[(1, "1st Year"), (2, "2nd Year"), (3, "3rd Year"), (4, "4th Year")]
+        choices=[(1, "1st Year"), (2, "2nd Year"), (3, "3rd Year"), (4, "4th Year")],
+        blank=True, null=True
     )
 
-    # Tell Django to use roll_number instead of username
-    USERNAME_FIELD = "roll_number"
-    REQUIRED_FIELDS = ["name", "course", "department", "year"]
-
     def __str__(self):
-            return self.username
+        return self.username
 
 
 

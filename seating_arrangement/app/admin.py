@@ -12,23 +12,17 @@ from .models import CustomUser
 
 @admin.register(CustomUser)
 class CustomUserAdmin(UserAdmin):
-    ordering = ("roll_number",)
-    list_display = ("roll_number", "name", "email", "course", "department", "year", "is_staff")
-    search_fields = ("roll_number", "name", "email")
+    # show important fields in admin list
+    list_display = ("username", "name", "email", "course", "department", "year", "is_staff")
+    search_fields = ("username", "name", "email")
 
-    fieldsets = (
-        (None, {"fields": ("roll_number", "password")}),
-        ("Personal info", {"fields": ("name", "email")}),
-        ("Academic", {"fields": ("course", "department", "year")}),
-        ("Permissions", {"fields": ("is_active", "is_staff", "is_superuser", "groups", "user_permissions")}),
-        ("Important dates", {"fields": ("last_login", "date_joined")}),
+    # keep default fieldsets, just add our extras
+    fieldsets = UserAdmin.fieldsets + (
+        ("Academic info", {"fields": ("name", "course", "department", "year")}),
     )
 
-    add_fieldsets = (
-        (None, {
-            "classes": ("wide",),
-            "fields": ("roll_number", "name", "email", "course", "department", "year", "password1", "password2"),
-        }),
+    add_fieldsets = UserAdmin.add_fieldsets + (
+        ("Academic info", {"fields": ("name", "course", "department", "year")}),
     )
 
 
