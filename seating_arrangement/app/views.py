@@ -767,3 +767,8 @@ def signup(request):
         "courses": courses,
         "departments": departments,
     })
+
+
+def invigilator_management(request):
+    
+    return render(request, "admin/InvigilatorManagement.html")

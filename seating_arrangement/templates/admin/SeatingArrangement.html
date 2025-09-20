@@ -154,12 +154,6 @@
               </div>
             </div>
           
-
-
-
-
-
-
             <!-- Preview Allocation -->
             <div class="mb-3">
               <label for="examDate" class="form-label fw-bold">Select Exam Date:</label>
@@ -168,69 +162,30 @@
 
             <div class="row g-4" id="roomsContainer">
               {% for room in rooms %}
-
-              <div class="col-md-4">
-                <a
-                  href="{% url 'seating_map_detail' room.id %}"
-                  class="text-decoration-none"
-                >
-                  <div class="border rounded p-3 hover-shadow">
-                    <h6 class="fw-bold">{{ room.room_number }}</h6>
-                    <small class="text-muted">
-
-                      Capacity: {{ room.capacity }} | Assigned: {{room.seating_set.count }}
-                       
-
-                      Capacity: {{ room.capacity }} | Assigned: {{ room.seating_set.count }}
-
-                    </small>
-                    <hr />
-                    <div class="d-flex flex-wrap gap-1">
-                      {% for seat in room.seating_set.all %} {% cycle 'bg-success' 'bg-danger' 'bg-warning' as seat_color silent %}
-                      <span class="badge {{ seat_color }}">
-                        {{ seat.student.roll_number }}
-                      </span>
-                      {% empty %}
-                      <p class="text-muted small">No students assigned yet.</p>
-                      {% endfor %}
-
-                {% if room.seating_set.all %}
-                  {% with room.seating_set.first as first_seat %}
-                    <div class="col-md-4 room-card" data-date="{{ first_seat.exam.session.date|date:'Y-m-d' }}">
-                      <a href="{% url 'seating_map_detail' room.id %}" class="text-decoration-none">
-                        <div class="border rounded p-3 hover-shadow">
-                          <h6 class="fw-bold">{{ room.room_number }}</h6>
-                          <small class="text-muted">
-                            Capacity: {{ room.capacity }} | Assigned: {{ room.seating_set.count }}
-                          </small>
-                          <hr />
-                          <div class="d-flex flex-wrap gap-1">
-                            {% for seat in room.seating_set.all %}
-                              {% cycle 'bg-success' 'bg-danger' 'bg-warning' as seat_color silent %}
-                              <span class="badge {{ seat_color }}">{{ seat.student.roll_number }}</span>
-                            {% endfor %}
-                          </div>
-                        </div>
-                      </a>
-
-                    </div>
-                  {% endwith %}
-                {% else %}
-                  <div class="col-md-4 room-card" data-date="">
-                    <a href="{% url 'seating_map_detail' room.id %}" class="text-decoration-none">
-                      <div class="border rounded p-3 hover-shadow">
-                        <h6 class="fw-bold">{{ room.room_number }}</h6>
-                        <small class="text-muted">Capacity: {{ room.capacity }} | Assigned: 0</small>
-                        <hr />
-                        <p class="text-muted small">No students assigned yet.</p>
+                <div class="col-md-4 room-card" 
+                     data-date="{% if room.seating_set.first %}{{ room.seating_set.first.exam.session.date|date:'Y-m-d' }}{% endif %}">
+                  <a href="{% url 'seating_map_detail' room.id %}" class="text-decoration-none">
+                    <div class="border rounded p-3 hover-shadow">
+                      <h6 class="fw-bold">{{ room.room_number }}</h6>
+                      <small class="text-muted">
+                        Capacity: {{ room.capacity }} | Assigned: {{ room.seating_set.count }}
+                      </small>
+                      <hr />
+                      <div class="d-flex flex-wrap gap-1">
+                        {% if room.seating_set.all %}
+                          {% for seat in room.seating_set.all %}
+                            {% cycle 'bg-success' 'bg-danger' 'bg-warning' as seat_color silent %}
+                            <span class="badge {{ seat_color }}">{{ seat.student.roll_number }}</span>
+                          {% endfor %}
+                        {% else %}
+                          <p class="text-muted small">No students assigned yet.</p>
+                        {% endif %}
                       </div>
-                    </a>
-                  </div>
-                {% endif %}
+                    </div>
+                  </a>
+                </div>
               {% endfor %}
             </div>
-
-
    
           </div>
         </div>
@@ -241,29 +196,29 @@
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
     <script src="../../static/toast.js"></script>
     <script>
-  function filterExamsByDate() {
-    const selectedDate = document.getElementById('examDate').value;
-    const exams = document.querySelectorAll('#examsContainer .card');
+      function filterExamsByDate() {
+        const selectedDate = document.getElementById('examDate').value;
+        const exams = document.querySelectorAll('#examsContainer .card');
 
-    exams.forEach(exam => {
-      exam.style.display = (exam.dataset.date === selectedDate) ? 'flex' : 'none';
-    });
-  }
-</script>
-<script>
-function filterByDate() {
-  const selectedDate = document.getElementById('examDate').value;
-  const roomCards = document.querySelectorAll('.room-card');
+        exams.forEach(exam => {
+          exam.style.display = (exam.dataset.date === selectedDate) ? 'flex' : 'none';
+        });
+      }
+    </script>
+    <script>
+      function filterByDate() {
+        const selectedDate = document.getElementById('examDate').value;
+        const roomCards = document.querySelectorAll('.room-card');
 
-  roomCards.forEach(card => {
-    const cardDate = card.getAttribute('data-date');
-    if (!selectedDate || cardDate === selectedDate) {
-      card.style.display = 'block';
-    } else {
-      card.style.display = 'none';
-    }
-  });
-}
-</script>
+        roomCards.forEach(card => {
+          const cardDate = card.getAttribute('data-date');
+          if (!selectedDate || cardDate === selectedDate) {
+            card.style.display = 'block';
+          } else {
+            card.style.display = 'none';
+          }
+        });
+      }
+    </script>
   </body>
 </html>
