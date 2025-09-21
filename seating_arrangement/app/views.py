@@ -21,6 +21,18 @@ from django.contrib.auth import authenticate, login
 from django.contrib import messages
 from .models import CustomUser
 
+
+from django.shortcuts import render, redirect
+from django.contrib.auth import authenticate, login, logout
+from django.contrib import messages
+
+
+
+from django.shortcuts import render, redirect
+from django.contrib.auth import authenticate, login
+from django.contrib import messages
+
+
 def login_view(request):
     if request.method == "POST":
         username = request.POST.get("username")  # roll number or employee ID
@@ -49,9 +61,12 @@ def login_view(request):
 
 
 
-def logout_view(request):
-    logout(request)  # clears session
-    return redirect("login")
+from django.contrib.auth import logout
+from django.shortcuts import redirect
+
+def student_logout(request):
+    logout(request)
+    return redirect('login')  # Replace with your login URL name
 
 
 
@@ -64,28 +79,50 @@ def index(request):
 @login_required
 def StudentOverView(request):
     # Get the student_id from session (CustomUser ID)
-    student_id = request.session.get("student_id")
+    student_id = request.session.get("user_id")
 
     if not student_id:
-        return redirect("student_login")
+        return redirect("login")
 
     try:
         # Get the logged-in user
         custom_user = CustomUser.objects.get(id=student_id)
     except CustomUser.DoesNotExist:
-        return redirect("student_login")
+        return redirect("login")
 
-    # Try to fetch matching Student record using roll_number
+    # Try to fetch matching Student record
     student_data = None
-    if custom_user.username:
-        try:
-            student_data = Student.objects.get(roll_number=custom_user.username)
-        except Student.DoesNotExist:
-            student_data = None
+    try:
+        student_data = Student.objects.get(roll_number=custom_user.username)
+    except Student.DoesNotExist:
+        student_data = None
+
+    # Fetch seatings
+    seatings = (
+        Seating.objects.filter(student=student_data)
+        .select_related("exam", "exam__session", "room")
+        .order_by("exam__session__date", "exam__session__start_time")
+    )
+
+    # Convert seatings into list of dicts for easy template rendering
+    exam_seats = [
+        {
+            "exam_name": s.exam.subject_name,
+            "seat_number": s.seat_number,
+            "room_number": s.room.room_number,
+        }
+        for s in seatings
+    ]
+
+    # Fetch announcements
+    announcements = NewsUpdate.objects.filter(status="approved").order_by("-created_at")
 
     context = {
-        "user": custom_user,     # details from CustomUser
-        "student": student_data  # details from Student model
+        "user": custom_user,
+        "student": student_data,
+        "exam_seats": exam_seats,   # 👈 this matches your HTML
+        "announcements": announcements,
+        "hall_ticket_url": "#",     # placeholder (replace with actual)
     }
     return render(request, "student/studentOverView.html", context)
 
@@ -114,10 +151,7 @@ def StudentSeatview(request):
     )
 
     # Announcements (replace with DB model if available)
-    announcements = [
-        {"title": "Exams Start Soon", "content": "Be on campus 30 mins before exam start time."},
-        {"title": "Lab Closed", "content": "Labs will be closed during exams."},
-    ]
+    announcements = NewsUpdate.objects.filter(status='approved').order_by('-created_at')
 
     context = {
         "student": student,
@@ -156,11 +190,12 @@ def StudentExamDetail(request):
 
     # Next upcoming exam
     next_exam = seatings.first()
-
+    announcements = NewsUpdate.objects.filter(status='approved').order_by('-created_at')
     context = {
         "student": student,
         "seatings": seatings,
         "next_exam": next_exam,
+        "announcements": announcements
     }
     return render(request, "student/StudentExamDetail.html", context)
 
@@ -410,6 +445,136 @@ def assign_seats_by_date(request):
 
         messages.success(request, f"Seats assigned for all exams on {date}")
     return redirect('seating_arrangement')
+
+
+
+def debarmanagement(request):
+     # Base queryset
+    students = Student.objects.all().select_related("course", "department")
+    rooms = Room.objects.all()
+
+    # Search
+    search_query = request.GET.get("search", "")
+    if search_query:
+        students = students.filter(
+            Q(name__icontains=search_query) |
+            Q(roll_number__icontains=search_query)
+        )
+
+    # Filters
+    course_filter = request.GET.get("course", "")
+    dept_filter = request.GET.get("department", "")
+    year_filter = request.GET.get("year", "")
+    debarred_filter = request.GET.get("debarred", "")
+
+    if course_filter:
+        students = students.filter(course__id=course_filter)
+    if dept_filter:
+        students = students.filter(department__id=dept_filter)
+    if year_filter:
+        students = students.filter(year=year_filter)
+    if debarred_filter == "yes":
+        students = students.filter(is_debarred=True)
+    elif debarred_filter == "no":
+        students = students.filter(is_debarred=False)
+
+    if request.method == "POST":
+        # 🔄 Update all seats + rooms
+        if "update_all_seats" in request.POST:
+            updated_count = 0
+            for key, value in request.POST.items():
+                if key.startswith("seat_") or key.startswith("room_"):
+                    roll_number = key.split("_", 1)[1]
+                    student = get_object_or_404(Student, roll_number=roll_number)
+
+                    # Get or create seating record
+                    seating, _ = Seating.objects.get_or_create(student=student, exam=Exam.objects.first())
+
+                    if key.startswith("seat_"):
+                        seat_value = value.strip()
+                        if seat_value and seating.seat_number != seat_value:
+                            seating.seat_number = seat_value
+                            updated_count += 1
+
+                    if key.startswith("room_"):
+                        if value:
+                            room = Room.objects.get(room_number=value)
+                            if seating.room != room:
+                                seating.room = room
+                                updated_count += 1
+
+                    seating.save()
+
+            messages.success(request, f"Seats/rooms updated for {updated_count} students.")
+            return redirect("debar-management")
+
+        # 🚫 Debar single student
+        for key in request.POST:
+            if key.startswith("debar_"):
+                roll_number = key.replace("debar_", "")
+                student = get_object_or_404(Student, roll_number=roll_number)
+                student.is_debarred = True
+                student.save()
+                messages.warning(request, f"{student.name} has been debarred!")
+                return redirect("debar-management")
+
+        # 📂 Bulk CSV upload
+        if "csv_file" in request.FILES:
+            csv_file = request.FILES["csv_file"]
+            if not csv_file.name.endswith(".csv"):
+                messages.error(request, "Please upload a valid CSV file.")
+                return redirect("debar-management")
+
+            data = csv_file.read().decode("utf-8").splitlines()
+            reader = csv.DictReader(data)
+            csv_updated_count, debarred_count = 0, 0
+
+            for row in reader:
+                roll = row.get("roll_number")
+                seat = row.get("seat")
+                room_number = row.get("room")
+                debar = row.get("debarred", "").lower()
+
+                try:
+                    student = Student.objects.get(roll_number=roll)
+                    seating, _ = Seating.objects.get_or_create(student=student, exam=Exam.objects.first())
+
+                    if seat:
+                        seating.seat_number = seat
+                        csv_updated_count += 1
+                    if room_number:
+                        try:
+                            seating.room = Room.objects.get(room_number=room_number)
+                            csv_updated_count += 1
+                        except Room.DoesNotExist:
+                            pass
+                    if debar in ["yes", "true", "1"]:
+                        student.is_debarred = True
+                        debarred_count += 1
+
+                    student.save()
+                    seating.save()
+                except Student.DoesNotExist:
+                    continue
+
+            messages.success(
+                request,
+                f"CSV processed: Seats updated: {csv_updated_count}, Students debarred: {debarred_count}"
+            )
+            return redirect("debar-management")
+
+    return render(request, 'admin/debarmanagement.html', {
+        "students": students,
+        "rooms": rooms,
+        "courses": Course.objects.all(),
+        "departments": Department.objects.all(),
+        "years": [1, 2, 3, 4],
+        "search_query": search_query,
+        "course_filter": course_filter,
+        "dept_filter": dept_filter,
+        "year_filter": year_filter,
+        "debarred_filter": debarred_filter,
+    })
 
 #invigilator 
 
@@ -747,27 +912,71 @@ from django.shortcuts import render, get_object_or_404, redirect
 from django.contrib import messages
 from .models import Student
 import csv
+from django.db.models import Q
+
+from django.db.models import Q
 
 def invigilatorSeatarrangement(request):
-    if request.method == "POST":
+    # Base queryset
+    students = Student.objects.all().select_related("course", "department")
+    rooms = Room.objects.all()
 
-        # 1️⃣ Update all seats
+    # Search
+    search_query = request.GET.get("search", "")
+    if search_query:
+        students = students.filter(
+            Q(name__icontains=search_query) |
+            Q(roll_number__icontains=search_query)
+        )
+
+    # Filters
+    course_filter = request.GET.get("course", "")
+    dept_filter = request.GET.get("department", "")
+    year_filter = request.GET.get("year", "")
+    debarred_filter = request.GET.get("debarred", "")
+
+    if course_filter:
+        students = students.filter(course__id=course_filter)
+    if dept_filter:
+        students = students.filter(department__id=dept_filter)
+    if year_filter:
+        students = students.filter(year=year_filter)
+    if debarred_filter == "yes":
+        students = students.filter(is_debarred=True)
+    elif debarred_filter == "no":
+        students = students.filter(is_debarred=False)
+
+    if request.method == "POST":
+        # 🔄 Update all seats + rooms
         if "update_all_seats" in request.POST:
             updated_count = 0
             for key, value in request.POST.items():
-                if key.startswith("seat_"):
-                    roll_number = key.replace("seat_", "")
-                    seat_value = value.strip()
-                    if seat_value:
-                        student = get_object_or_404(Student, roll_number=roll_number)
-                        if student.seat != seat_value:
-                            student.seat = seat_value
-                            student.save()
+                if key.startswith("seat_") or key.startswith("room_"):
+                    roll_number = key.split("_", 1)[1]
+                    student = get_object_or_404(Student, roll_number=roll_number)
+
+                    # Get or create seating record
+                    seating, _ = Seating.objects.get_or_create(student=student, exam=Exam.objects.first())
+
+                    if key.startswith("seat_"):
+                        seat_value = value.strip()
+                        if seat_value and seating.seat_number != seat_value:
+                            seating.seat_number = seat_value
                             updated_count += 1
-            messages.success(request, f"Seats updated for {updated_count} students.")
+
+                    if key.startswith("room_"):
+                        if value:
+                            room = Room.objects.get(room_number=value)
+                            if seating.room != room:
+                                seating.room = room
+                                updated_count += 1
+
+                    seating.save()
+
+            messages.success(request, f"Seats/rooms updated for {updated_count} students.")
             return redirect("invigilatorseatarrangement")
 
-        # 2️⃣ Debar single student
+        # 🚫 Debar single student
         for key in request.POST:
             if key.startswith("debar_"):
                 roll_number = key.replace("debar_", "")
@@ -777,7 +986,7 @@ def invigilatorSeatarrangement(request):
                 messages.warning(request, f"{student.name} has been debarred!")
                 return redirect("invigilatorseatarrangement")
 
-        # 3️⃣ Bulk CSV upload
+        # 📂 Bulk CSV upload
         if "csv_file" in request.FILES:
             csv_file = request.FILES["csv_file"]
             if not csv_file.name.endswith(".csv"):
@@ -786,23 +995,33 @@ def invigilatorSeatarrangement(request):
 
             data = csv_file.read().decode("utf-8").splitlines()
             reader = csv.DictReader(data)
-            csv_updated_count = 0
-            debarred_count = 0
+            csv_updated_count, debarred_count = 0, 0
 
             for row in reader:
                 roll = row.get("roll_number")
                 seat = row.get("seat")
+                room_number = row.get("room")
                 debar = row.get("debarred", "").lower()
 
                 try:
                     student = Student.objects.get(roll_number=roll)
+                    seating, _ = Seating.objects.get_or_create(student=student, exam=Exam.objects.first())
+
                     if seat:
-                        student.seat = seat
+                        seating.seat_number = seat
                         csv_updated_count += 1
+                    if room_number:
+                        try:
+                            seating.room = Room.objects.get(room_number=room_number)
+                            csv_updated_count += 1
+                        except Room.DoesNotExist:
+                            pass
                     if debar in ["yes", "true", "1"]:
                         student.is_debarred = True
                         debarred_count += 1
+
                     student.save()
+                    seating.save()
                 except Student.DoesNotExist:
                     continue
 
@@ -812,13 +1031,18 @@ def invigilatorSeatarrangement(request):
             )
             return redirect("invigilatorseatarrangement")
 
-    # GET request
-    students = Student.objects.all().select_related("course", "department")
-    return render(request, 'invigilator/invigilatorSeatarrangement.html', {"students": students})
-
-
-
-
+    return render(request, 'invigilator/invigilatorSeatarrangement.html', {
+        "students": students,
+        "rooms": rooms,
+        "courses": Course.objects.all(),
+        "departments": Department.objects.all(),
+        "years": [1, 2, 3, 4],
+        "search_query": search_query,
+        "course_filter": course_filter,
+        "dept_filter": dept_filter,
+        "year_filter": year_filter,
+        "debarred_filter": debarred_filter,
+    })
 
 
 from django.contrib.auth.decorators import login_required

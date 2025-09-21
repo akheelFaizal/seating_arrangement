@@ -9,32 +9,33 @@ urlpatterns = [
         # student
         # path('student/login/', views.StudentLogin, name='student_login'),
         path("student/login/", views.login_view, name="login"),
-        path("student/logout/", views.logout_view, name="logout"),
+        path('logout/', views.student_logout, name='student_logout'),
         path('student/overview/', views.StudentOverView, name='student_overview'),
         path('student/seatview/', views.StudentSeatview, name='student_seatview'),
         path('student/examdetail/', views.StudentExamDetail, name='student_examdetail'),
         # path('student/signupaction',views.StudentSignupAction),
-        path("student/signup/",views.signup, name="signup"),
+        path("",views.signup, name="signup"),
 
         #admin
-        path('adminhome', views.index),
+       
         path('student-management/',views.StudentManagement),
         path('seating-arrangement/',views.SeatingArrangement),
         path('exam/',views.ExamSchedule),
 
 
-        #invigilator
-
-        path('invigilator/teacheroverview',views.teacheroverview),
+        
+        
 
         # admin
-        path('', views.index, name='index'),
+        
+        path('index', views.index, name='index'),
         path('student-management/', views.StudentManagement, name='student_management'),
         path('seating-arrangement/', views.SeatingArrangement, name='seating_arrangement'),
         path('exam/', views.ExamSchedule, name='exam_schedule'),
         path('room-management/', views.room_management, name='room_management'),
         path('news-management/', views.NewsManagement, name='news_updates'),
         path('analytics/', views.analytics, name='analytics'),
+        path('debar-management/',views.debarmanagement,name="debar-management"),
 
         
         # admin functionalities

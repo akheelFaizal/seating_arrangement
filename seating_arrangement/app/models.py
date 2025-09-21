@@ -46,8 +46,9 @@ class CustomUser(AbstractUser):
     ROLE_CHOICES = (
         ("student", "Student"),
         ("invigilator", "Invigilator"),
+        ("admin","admin")
     )
-    role = models.CharField(max_length=20, choices=ROLE_CHOICES, default="student")
+    role = models.CharField(max_length=20, choices=ROLE_CHOICES, default="admin")
 
     # Invigilator-specific fields
     employee_id = models.CharField(max_length=50, blank=True, null=True)
