@@ -124,7 +124,6 @@ class Room(models.Model):
         ('active', 'Active'),
         ('inactive', 'Inactive'),
     ]
-
     status = models.CharField(
         max_length=10,
         choices=STATUS_CHOICES,
@@ -134,8 +133,26 @@ class Room(models.Model):
     rows = models.PositiveIntegerField(default=5, validators=[MinValueValidator(1)])
     columns = models.PositiveIntegerField(default=2, validators=[MinValueValidator(1)])
     
-    def _str_(self):
+    def __str__(self):
         return self.room_number
+
+    # ✅ Helper to calculate availability
+    def available_seats(self, exam_session=None):
+        """
+        Returns available seats for this room.
+        If exam_session is provided, count only for that session.
+        """
+        qs = self.seating_set.all()
+        if exam_session:
+            qs = qs.filter(examSession=exam_session)
+        used = qs.count()
+        return max(self.capacity - used, 0)
+
+    def used_seats(self, exam_session=None):
+        qs = self.seating_set.all()
+        if exam_session:
+            qs = qs.filter(examSession=exam_session)
+        return qs.count()
 
 
 #seating info

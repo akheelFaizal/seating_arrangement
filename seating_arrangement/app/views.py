@@ -33,29 +33,40 @@ from django.contrib.auth import authenticate, login
 from django.contrib import messages
 
 
+from django.shortcuts import render, redirect
+from django.contrib.auth import authenticate, login
+from django.contrib import messages
+
 def login_view(request):
     if request.method == "POST":
-        username = request.POST.get("username")  # roll number or employee ID
+        username = request.POST.get("username")  # roll number / employee ID / admin username
         password = request.POST.get("password")
 
-        user = authenticate(request, username=username, password=password)  # uses custom backend
-    
+        user = authenticate(request, username=username, password=password)
+
         if user is not None:
             login(request, user)
 
             # Save user info in session
-            request.session['user_id'] = user.id
-            request.session['role'] = user.role
+            request.session["user_id"] = user.id
+            request.session["role"] = user.role
 
-            # Redirect based on role
+            # ✅ Redirect based on role
             if user.role == "student":
-                return redirect("student_overview")  # your student dashboard
+                return redirect("student_overview")      # your student dashboard
             elif user.role == "invigilator":
                 return redirect("invigilatordashboard")  # your invigilator dashboard
+            elif user.role == "admin":
+                return redirect("index")       # your admin dashboard
+            else:
+                messages.error(request, "Role not recognized.")
+                return redirect("login")
         else:
             messages.error(request, "Invalid username or password")
+            return redirect("login")
 
     return render(request, "student/studentLogin.html")
+
 
 
 
@@ -70,10 +81,44 @@ def student_logout(request):
 
 
 
+from django.shortcuts import render
+from django.utils.timezone import now
+from .models import Student, Room, Exam
 
+from django.shortcuts import render
+from django.utils.timezone import now
+from datetime import datetime
+from .models import Student, Room, Exam, ExamSession
 
 def index(request):
-      return render(request, 'admin/Admin.html')
+    total_students = Student.objects.count()
+    total_rooms = Room.objects.count()
+
+    # Join exam with its session
+    upcoming_exams = Exam.objects.filter(
+        session__date__gte=now().date()
+    ).order_by("session__date", "session__start_time")[:3]
+
+    active_exams = upcoming_exams.count()  # could be refined by time window
+
+    # Occupancy rate (dummy logic - adjust to your seating model)
+    total_capacity = sum(room.capacity for room in Room.objects.all())
+    used_capacity = total_capacity - sum(room.available_seats() for room in Room.objects.all()) if total_capacity else 0
+    occupancy_rate = round((used_capacity / total_capacity) * 100, 2) if total_capacity else 0
+
+    rooms = Room.objects.all()
+
+    return render(request, "admin/Admin.html", {
+        "total_students": total_students,
+        "total_rooms": total_rooms,
+        "active_exams": active_exams,
+        "occupancy_rate": occupancy_rate,
+        "upcoming_exams": upcoming_exams,
+        "rooms": rooms,
+    })
+
+
+
 
 
 @login_required
@@ -956,7 +1001,8 @@ def invigilatorSeatarrangement(request):
                     student = get_object_or_404(Student, roll_number=roll_number)
 
                     # Get or create seating record
-                    seating, _ = Seating.objects.get_or_create(student=student, exam=Exam.objects.first())
+                    seating, _ = Seating.objects.get_or_create(student=student, exam=Exam.objects.first()
+                                                               ,defaults={"seat_number": 0, "room": rooms.first()})
 
                     if key.startswith("seat_"):
                         seat_value = value.strip()

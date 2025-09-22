@@ -41,136 +41,81 @@
             <div class="row g-3">
               <!-- Card 1 -->
               <div class="col-12 col-sm-6 col-lg-3">
-                {% include 'components/Card.html' with title="Total Students" value=12500 icon="bi-people-fill" trend="8%" color_start="#3b82f6" color_end="#2563eb" %}
+              {% include 'components/Card.html' with title="Total Students" value=total_students icon="bi-people-fill" trend="8%" color_start="#3b82f6" color_end="#2563eb" %}
               </div>
               <!-- Card 2 -->
               <div class="col-12 col-sm-6 col-lg-3">
-                {% include 'components/Card.html' with title="Total Rooms" value=150 trend="12%" icon="bi-building" trend_icon="bi-graph-up" color_start="#22c55e" color_end="#16a34a" color_start="#22c55e" color_end="#16a34a" %}
+              {% include 'components/Card.html' with title="Total Rooms" value=total_rooms trend="12%" icon="bi-building" trend_icon="bi-graph-up" color_start="#22c55e" color_end="#16a34a" %}
               </div>
               <!-- Card 3 -->
               <div class="col-12 col-sm-6 col-lg-3">
-                {% include 'components/Card.html' with title="Active Exams" value=8 icon="bi-calendar-event" trend="-5%" trend_icon="down" color_start="#a855f7" color_end="#7e22ce" %}
-              </div>
+              {% include 'components/Card.html' with title="Active Exams" value=active_exams icon="bi-calendar-event" trend="-5%" trend_icon="down" color_start="#a855f7" color_end="#7e22ce" %}
+                </div>
               <!-- Card 4 -->
               <div class="col-12 col-sm-6 col-lg-3">
-                {% include 'components/Card.html' with title="Occupancy Rate" value="87%" icon="bi-bar-chart-line-fill" trend="15%" trend_icon="up" color_start="#f97316" color_end="#ea580c" %}
+              {% include 'components/Card.html' with title="Occupancy Rate" value=occupancy_rate|stringformat:"d%%" icon="bi-bar-chart-line-fill" trend="15%" trend_icon="up" color_start="#f97316" color_end="#ea580c" %}
+
               </div>
             </div>
 
             <!-- Upcoming Exams and Room Status -->
-            <div class="row mt-2 g-3">
-              <!-- Upcoming Exams -->
-              <div class="col-lg-6">
-                <div class="bg-white p-4 rounded shadow-lg">
-                  <h5 class="mb-4 d-flex align-items-center fw-bold text-dark">
-                    <i class="bi bi-calendar-event me-2 text-indigo-600"></i>
-                    Upcoming Exams
-                  </h5>
-                  <div class="d-flex flex-column gap-3">
-                    <div
-                      class="d-flex flex-column flex-sm-row justify-content-between bg-light p-3 rounded"
-                    >
-                      <div>
-                        <p class="fw-semibold mb-0 text-dark">Mathematics</p>
-                        <small class="text-muted"
-                          >Aug 10, 2025 at 10:00 AM</small
-                        >
-                      </div>
-                      <div class="text-end mt-2 mt-sm-0">
-                        <p class="mb-1 text-muted">Room A101</p>
-                        <span class="badge bg-success">Scheduled</span>
-                      </div>
-                    </div>
-                    <div
-                      class="d-flex flex-column flex-sm-row justify-content-between bg-light p-3 rounded"
-                    >
-                      <div>
-                        <p class="fw-semibold mb-0 text-dark">Physics</p>
-                        <small class="text-muted"
-                          >Aug 12, 2025 at 1:00 PM</small
-                        >
-                      </div>
-                      <div class="text-end mt-2 mt-sm-0">
-                        <p class="mb-1 text-muted">Room B203</p>
-                        <span class="badge bg-success">Scheduled</span>
-                      </div>
-                    </div>
-                    <div
-                      class="d-flex flex-column flex-sm-row justify-content-between bg-light p-3 rounded"
-                    >
-                      <div>
-                        <p class="fw-semibold mb-0 text-dark">Chemistry</p>
-                        <small class="text-muted"
-                          >Aug 15, 2025 at 9:00 AM</small
-                        >
-                      </div>
-                      <div class="text-end mt-2 mt-sm-0">
-                        <p class="mb-1 text-muted">Room C110</p>
-                        <span class="badge bg-warning text-dark">Pending</span>
-                      </div>
-                    </div>
+           <div class="row mt-2 g-3">
+            <!-- Upcoming Exams -->
+            <div class="col-lg-6">
+              <div class="bg-white p-4 rounded shadow-lg">
+                <h5 class="mb-4 d-flex align-items-center fw-bold text-dark">
+                  <i class="bi bi-calendar-event me-2 text-primary"></i> Upcoming Exams
+                </h5>
+
+                {% for exam in upcoming_exams %}
+                <div class="d-flex flex-column flex-sm-row justify-content-between bg-light p-3 rounded mb-2">
+                  <div>
+                    <p class="fw-semibold mb-0 text-dark">{{ exam.subject_name }}</p>
+                    <small class="text-muted">
+                      {{ exam.session.date|date:"M d, Y" }} @ {{ exam.session.start_time|time:"h:i A" }}
+                    </small>
+                  </div>
+                  <div class="text-end mt-2 mt-sm-0">
+                    <p class="mb-1 text-muted">{{ exam.department.name }}</p>
+                    <span class="badge bg-success">Scheduled</span>
                   </div>
                 </div>
-              </div>
-
-              <!-- Room Status -->
-              <div class="col-lg-6">
-                <div class="bg-white p-4 rounded shadow-lg">
-                  <h5 class="mb-4 d-flex align-items-center fw-bold text-dark">
-                    <i class="bi bi-building me-2 text-indigo-600"></i> Room
-                    Status
-                  </h5>
-
-                  <div class="d-flex flex-column gap-3">
-                    <!-- Room 1 -->
-                    <div
-                      class="d-flex justify-content-between align-items-center bg-light p-3 rounded"
-                    >
-                      <div>
-                        <p class="mb-1 fw-semibold text-dark">Room A101</p>
-                        <small class="text-muted">Capacity: 40</small>
-                      </div>
-                      <div class="text-end ms-3">
-                        <p class="mb-1 text-muted">25 available</p>
-                        <div
-                          class="progress bg-secondary-subtle"
-                          style="height: 6px; width: 100px"
-                        >
-                          <div
-                            class="progress-bar bg-success"
-                            style="width: 62.5%"
-                          ></div>
-                        </div>
-                      </div>
-                    </div>
-
-                    <!-- Room 2 -->
-                    <div
-                      class="d-flex justify-content-between align-items-center bg-light p-3 rounded"
-                    >
-                      <div>
-                        <p class="mb-1 fw-semibold text-dark">Room B202</p>
-                        <small class="text-muted">Capacity: 30</small>
-                      </div>
-                      <div class="text-end ms-3">
-                        <p class="mb-1 text-muted">10 available</p>
-                        <div
-                          class="progress bg-secondary-subtle"
-                          style="height: 6px; width: 100px"
-                        >
-                          <div
-                            class="progress-bar bg-success"
-                            style="width: 33.33%"
-                          ></div>
-                        </div>
-                      </div>
-                    </div>
-
-                    <!-- Add more rooms as needed -->
-                  </div>
-                </div>
+                {% empty %}
+                <p class="text-muted">No upcoming exams</p>
+                {% endfor %}
               </div>
             </div>
+
+            <!-- Room Status -->
+            <div class="col-lg-6">
+              <div class="bg-white p-4 rounded shadow-lg">
+                <h5 class="mb-4 d-flex align-items-center fw-bold text-dark">
+                  <i class="bi bi-building me-2 text-primary"></i> Room Status
+                </h5>
+
+                {% for room in rooms %}
+                <div class="d-flex justify-content-between align-items-center bg-light p-3 rounded mb-2">
+                  <div>
+                    <p class="mb-1 fw-semibold text-dark">{{ room.room_number }}</p>
+                    <small class="text-muted">Capacity: {{ room.capacity }}</small>
+                  </div>
+                  <div class="text-end ms-3">
+                    <p class="mb-1 text-muted">{{ room.available_seats }} available</p>
+                    <div class="progress bg-secondary-subtle" style="height: 6px; width: 100px">
+                      <div class="progress-bar bg-success"
+                          style="width: {% widthratio room.used_seats room.capacity 100 %}%">
+                      </div>
+                    </div>
+                  </div>
+                </div>
+                {% empty %}
+                <p class="text-muted">No rooms available</p>
+                {% endfor %}
+              </div>
+            </div>
+          </div>
+
+
             <!-- End Two Column Section -->
           </div>
         </div>
