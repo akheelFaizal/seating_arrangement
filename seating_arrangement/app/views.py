@@ -1,5 +1,6 @@
 from collections import defaultdict
-from datetime import date, timedelta
+from datetime import datetime
+from datetime import datetime, date, timedelta
 
 import csv
 import random
@@ -14,7 +15,7 @@ from django.shortcuts import render, redirect, get_object_or_404
 from django.utils.timezone import now
 
 from .models import *   
-
+from django.db.models import Count
 
 from django.shortcuts import render, redirect
 from django.contrib.auth import authenticate, login
@@ -36,6 +37,9 @@ from django.contrib import messages
 from django.shortcuts import render, redirect
 from django.contrib.auth import authenticate, login
 from django.contrib import messages
+
+from django.core.files.storage import default_storage
+
 
 def login_view(request):
     if request.method == "POST":
@@ -69,26 +73,10 @@ def login_view(request):
 
 
 
-
-
-
-from django.contrib.auth import logout
-from django.shortcuts import redirect
-
 def student_logout(request):
     logout(request)
     return redirect('login')  # Replace with your login URL name
 
-
-
-from django.shortcuts import render
-from django.utils.timezone import now
-from .models import Student, Room, Exam
-
-from django.shortcuts import render
-from django.utils.timezone import now
-from datetime import datetime
-from .models import Student, Room, Exam, ExamSession
 
 def index(request):
     total_students = Student.objects.count()
@@ -171,10 +159,6 @@ def StudentOverView(request):
     }
     return render(request, "student/studentOverView.html", context)
 
-from datetime import date
-from django.contrib.auth.decorators import login_required
-from django.shortcuts import get_object_or_404, render
-from .models import Student, Seating
 
 @login_required
 def StudentSeatview(request):
@@ -763,9 +747,6 @@ def remove_all_assignments(request):
     return redirect('seating_arrangement')
 
 
-from datetime import date
-
-
 def room_management(request):
     # Handle Add Room
     if request.method == "POST":
@@ -851,8 +832,6 @@ def news_reject(request, pk):
     news.save()
     return redirect("news_updates")
 
-from django.db.models import Count
-
 def analytics(request):
     # 1️⃣ Metrics
     total_students = Student.objects.count()
@@ -905,18 +884,6 @@ def analytics(request):
     return render(request, "admin/Analytics.html", context)
 
 #invigilators
-
-from django.shortcuts import render, redirect
-from django.contrib.auth.decorators import login_required
-from .models import CustomUser
-
-from django.shortcuts import render, redirect
-from django.contrib.auth.decorators import login_required
-from .models import CustomUser, Seating, Exam, Room
-from django.contrib.auth.decorators import login_required
-from django.shortcuts import render, redirect
-from .models import Room, Seating
-
 @login_required
 def invigilator_dashboard(request):
     user = request.user
@@ -948,18 +915,6 @@ def invigilator_dashboard(request):
 
     return render(request, 'invigilator/invigilatorOverview.html', context)
 
-
-from django.shortcuts import render, get_object_or_404, redirect
-from django.contrib import messages
-from .models import Student
-import csv
-from django.shortcuts import render, get_object_or_404, redirect
-from django.contrib import messages
-from .models import Student
-import csv
-from django.db.models import Q
-
-from django.db.models import Q
 
 def invigilatorSeatarrangement(request):
     # Base queryset
@@ -1091,10 +1046,6 @@ def invigilatorSeatarrangement(request):
     })
 
 
-from django.contrib.auth.decorators import login_required
-from django.shortcuts import render
-from .models import Room, Seating, Exam
-
 @login_required
 def invigilatorProfile(request):
     user = request.user
@@ -1137,14 +1088,6 @@ def invigilatorProfile(request):
 
     return render(request, "invigilator/invigilatorProfile.html", context)
 
-<<<<<<< HEAD
-=======
-
-from django.shortcuts import render, redirect
-from django.contrib import messages
-from .models import CustomUser, Course, Department
-from django.core.files.storage import default_storage
->>>>>>> 8fb4747f8410e0533cce36ce7135504506cf6f59
 
 def signup(request):
     if request.method == "POST":
@@ -1189,14 +1132,8 @@ def signup(request):
             if CustomUser.objects.filter(username=employee_id).exists():
                 messages.error(request, "Employee ID already registered.")
                 return redirect("signup")
-
-<<<<<<< HEAD
-            # Create invigilator user
-            CustomUser.objects.create_user(
-=======
             # ✅ Create invigilator user
             user = CustomUser.objects.create_user(
->>>>>>> 8fb4747f8410e0533cce36ce7135504506cf6f59
                 username=employee_id,
                 first_name=name,
                 role=role,
@@ -1220,12 +1157,8 @@ def signup(request):
         "departments": departments,
     })
 
-<<<<<<< HEAD
-=======
 
-from django.contrib.auth.decorators import login_required
-from django.shortcuts import render, redirect
-from django.contrib import messages
+
 
 @login_required
 def edit_invigilator_profile(request):
@@ -1257,14 +1190,15 @@ def edit_invigilator_profile(request):
 
 
 
->>>>>>> 8fb4747f8410e0533cce36ce7135504506cf6f59
 def invigilator_management(request):
     # Prefetch rooms in a single query using select_related or annotate
     invigilators = CustomUser.objects.filter(role="invigilator").select_related()
+    debarred_students = Student.objects.filter(is_debarred=True)
 
     # Get all rooms with supervisors in one query
     rooms = Room.objects.select_related('supervisor').all()
     allrooms = Room.objects.all()
+    print(allrooms)
     room_map = {room.supervisor_id: room.room_number for room in rooms if room.supervisor_id}
 
     # Prepare data for template
@@ -1274,13 +1208,12 @@ def invigilator_management(request):
             'name': inv.name or inv.username,
             'email': inv.email,
             'phone': inv.username,  # or a phone field if available
-            'assigned_room': room_map.get(inv.id),
-            'rooms':allrooms
+            'assigned_room': room_map.get(inv.id)
         }
         for inv in invigilators
     ]
 
-    return render(request, 'admin/InvigilatorManagement.html', {'invigilators': data})
+    return render(request, 'admin/InvigilatorManagement.html', {'invigilators': data, 'rooms': allrooms, 'debarred_students':debarred_students})
 
 
 def add_session(request):
@@ -1333,3 +1266,13 @@ def assign_invigilator_room(request, invigilator_id):
             room.save()
             messages.success(request, f"{invigilator.name} assigned to {room.room_number}.")
         return redirect("invigilator_management")
+    
+def reinstate_student(request, id):
+    student = get_object_or_404(Student, id=id)
+
+    if student.is_debarred:
+        student.is_debarred = False
+    else:
+        student.is_debarred = True
+    student.save()
+    return redirect('invigilator_management')
