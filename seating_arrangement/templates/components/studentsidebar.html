@@ -37,7 +37,7 @@
           <a
             href="/student/overview"
             type="button"
-            class="btn sidebar-btn text-start text-white d-flex align-items-center active"
+            class="btn sidebar-btn text-start text-white d-flex align-items-center {{statusAB}}"
             data-id="overview"
           >
             <svg
@@ -56,7 +56,7 @@
           <a
             href="/student/seatview"
             type="button"
-            class="btn sidebar-btn text-start text-white d-flex align-items-center"
+            class="btn sidebar-btn text-start text-white d-flex align-items-center {{statusAC}}"
             data-id="exam-seat"
           >
             <svg
@@ -75,7 +75,7 @@
           <a
             href="/student/examdetail"
             type="button"
-            class="btn sidebar-btn text-start text-white d-flex align-items-center"
+            class="btn sidebar-btn text-start text-white d-flex align-items-center {{statusAD}}"
             data-id="exam-timetable"
           >
             <svg
@@ -91,6 +91,24 @@
             <span>Exam Time Table</span>
           </a>
         </nav>
+        <!-- Logout -->
+        <a
+          href="{% url 'student_logout' %}"
+          type="button"
+          class="btn sidebar-btn text-start text-white d-flex align-items-center mt-auto"
+          data-id="logout"
+        >
+          <svg
+            xmlns="http://www.w3.org/2000/svg"
+            fill="currentColor"
+            viewBox="0 0 24 24"
+          >
+            <path d="M16 13v-2H7V8l-5 4 5 4v-3h9z" />
+            <path d="M20 3h-8v2h8v14h-8v2h8a2 2 0 0 0 2-2V5a2 2 0 0 0-2-2z" />
+          </svg>
+          <span>Logout</span>
+        </a>
+
       </div>
     </div>
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>

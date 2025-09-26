@@ -37,7 +37,7 @@
     <div class="row flex-grow-1">
         <!-- Sidebar -->
         <div id="sidebarWrapper" class="col-lg-2 d-none d-lg-block p-0 bg-white border-end">
-            {% include 'components/studentsidebar.html' %}
+            {% include 'components/studentsidebar.html' with statusAB="active"%}
         </div>
         <!-- Main Content -->
         <div id="mainContent" class="col p-0">
@@ -94,13 +94,14 @@
                             <h5 class="fw-bold mb-3"><i class="bi bi-door-open-fill me-2 text-success"></i> Class Seating</h5>
                             <ul class="list-group list-group-flush">
                                 {% for seat in exam_seats %}
-                                <li class="list-group-item d-flex justify-content-between">
-                                    <span>{{ seat.exam_name }}</span>
-                                    <span class="badge bg-primary">Seat {{ seat.seat_number }} - Room {{ seat.room_number }}</span>
-                                </li>
-                                {% empty %}
-                                <li class="list-group-item">No seating assigned.</li>
+                                    <li class="list-group-item d-flex justify-content-between">
+                                        <span>{{ seat.exam_name }}</span>
+                                        <span class="badge bg-primary">Seat {{ seat.seat_number }} - Room {{ seat.room_number }}</span>
+                                    </li>
+                                    {% empty %}
+                                    <li class="list-group-item">No seating assigned.</li>
                                 {% endfor %}
+
                             </ul>
                         </div>
                     </div>

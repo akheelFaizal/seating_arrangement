@@ -28,6 +28,16 @@
 
     <!-- Navigation -->
     <nav id="navButtons" class="d-flex flex-column gap-3" role="navigation">
+      <a href="/invigilator/invigilatorOverview"
+         class="btn sidebar-btn text-start text-white d-flex align-items-center {{statusRO}}">
+        <svg xmlns="http://www.w3.org/2000/svg" fill="currentColor" viewBox="0 0 24 24">
+              <rect x="3" y="12" width="4" height="8" />
+              <rect x="10" y="8" width="4" height="12" />
+              <rect x="17" y="4" width="4" height="16" />
+            </svg>
+        <span>Overview</span>
+      </a>
+
 
       <a href="/invigilator/seatarrangement"
          class="btn sidebar-btn text-start text-white d-flex align-items-center {{statusRD}}">
@@ -53,6 +63,22 @@
         <span>Allotted Room Students</span>
       </a>
     </nav>
+    <a
+      href="{% url 'student_logout' %}"
+      type="button"
+      class="btn sidebar-btn text-start text-white d-flex align-items-center mt-1"
+      data-id="logout"
+    >
+      <svg
+        xmlns="http://www.w3.org/2000/svg"
+        fill="currentColor"
+        viewBox="0 0 24 24"
+      >
+        <path d="M16 13v-2H7V8l-5 4 5 4v-3h9z" />
+        <path d="M20 3h-8v2h8v14h-8v2h8a2 2 0 0 0 2-2V5a2 2 0 0 0-2-2z" />
+      </svg>
+      <span>Logout</span>
+    </a>
   </div>
 </div>
 </body>

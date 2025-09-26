@@ -26,28 +26,42 @@ class Course(models.Model):
 
 
 
+from django.contrib.auth.models import AbstractUser
+from django.db import models
+
+
 class CustomUser(AbstractUser):
-    # username will be roll_number for students or employee_id for invigilators
+    # Common fields
     name = models.CharField(max_length=100, blank=True, null=True)
+
+    # Student-specific fields
     course = models.ForeignKey("Course", on_delete=models.CASCADE, blank=True, null=True)
     department = models.ForeignKey("Department", on_delete=models.CASCADE, blank=True, null=True)
     year = models.PositiveIntegerField(
         choices=[(1, "1st Year"), (2, "2nd Year"), (3, "3rd Year"), (4, "4th Year")],
         blank=True, null=True
     )
-    
-    # New fields for invigilator support
+
+    # Role
     ROLE_CHOICES = (
         ("student", "Student"),
         ("invigilator", "Invigilator"),
+        ("admin","admin")
     )
-    role = models.CharField(max_length=20, choices=ROLE_CHOICES, default="student")
-    # For invigilators
+    role = models.CharField(max_length=20, choices=ROLE_CHOICES, default="admin")
+
+    # Invigilator-specific fields
     employee_id = models.CharField(max_length=50, blank=True, null=True)
     invigilator_department = models.CharField(max_length=100, blank=True, null=True)
+    profile_picture = models.ImageField(upload_to="invigilators/", blank=True, null=True)  # ✅ Only for invigilator
+    
+    
+    
+
 
     def __str__(self):
         return f"{self.name or self.username} ({self.role})"
+
 
 
 
@@ -62,7 +76,7 @@ class Student(models.Model):
         choices=[(1, "1st Year"), (2, "2nd Year"), (3, "3rd Year"), (4, "4th Year")],
         default=1
     )
-
+    is_debarred = models.BooleanField(default=False)
     def _str_(self):
         return f"{self.name} ({self.roll_number})"
     
@@ -108,7 +122,6 @@ class Room(models.Model):
         ('active', 'Active'),
         ('inactive', 'Inactive'),
     ]
-
     status = models.CharField(
         max_length=10,
         choices=STATUS_CHOICES,
@@ -118,8 +131,26 @@ class Room(models.Model):
     rows = models.PositiveIntegerField(default=5, validators=[MinValueValidator(1)])
     columns = models.PositiveIntegerField(default=2, validators=[MinValueValidator(1)])
     
-    def _str_(self):
+    def __str__(self):
         return self.room_number
+
+    # ✅ Helper to calculate availability
+    def available_seats(self, exam_session=None):
+        """
+        Returns available seats for this room.
+        If exam_session is provided, count only for that session.
+        """
+        qs = self.seating_set.all()
+        if exam_session:
+            qs = qs.filter(examSession=exam_session)
+        used = qs.count()
+        return max(self.capacity - used, 0)
+
+    def used_seats(self, exam_session=None):
+        qs = self.seating_set.all()
+        if exam_session:
+            qs = qs.filter(examSession=exam_session)
+        return qs.count()
 
 
 #seating info

@@ -34,18 +34,10 @@
           </svg>
           <h1 class="fs-4 fw-bold mb-0">SeatMaster Pro</h1>
         </div>
+
         <nav id="navButtons" class="d-flex flex-column gap-3" role="navigation">
-          <a
-            href="/"
-            type="button"
-            class="btn sidebar-btn text-start text-white d-flex align-items-center {{statusOV}}"
-            data-id="overview"
-          >
-            <svg
-              xmlns="http://www.w3.org/2000/svg"
-              fill="currentColor"
-              viewBox="0 0 24 24"
-            >
+          <a href="/index" class="btn sidebar-btn text-start text-white d-flex align-items-center {{statusOV}}">
+            <svg xmlns="http://www.w3.org/2000/svg" fill="currentColor" viewBox="0 0 24 24">
               <rect x="3" y="12" width="4" height="8" />
               <rect x="10" y="8" width="4" height="12" />
               <rect x="17" y="4" width="4" height="16" />
@@ -53,34 +45,17 @@
             <span>Overview</span>
           </a>
 
-          <a
-            href="/student-management/"
-            type="button"
-            class="btn sidebar-btn text-start text-white d-flex align-items-center {{statusSM}}"
-            data-id="students"
-          >
-            <svg
-              xmlns="http://www.w3.org/2000/svg"
-              fill="currentColor"
-              viewBox="0 0 24 24"
-            >
+          <a href="/student-management/" class="btn sidebar-btn text-start text-white d-flex align-items-center {{statusSM}}">
+            <svg xmlns="http://www.w3.org/2000/svg" fill="currentColor" viewBox="0 0 24 24">
               <circle cx="9" cy="7" r="4" />
               <path d="M17 11v1a3 3 0 0 1-6 0v-1a3 3 0 0 1 6 0z" />
               <path d="M2 20a7 7 0 0 1 14 0" />
             </svg>
             <span>Student Management</span>
           </a>
-          <a
-            href="/invigilators/"
-            type="button"
-            class="btn sidebar-btn text-start text-white d-flex align-items-center {{statusIM}}"
-            data-id="students"
-          >
-            <svg
-              xmlns="http://www.w3.org/2000/svg"
-              fill="currentColor"
-              viewBox="0 0 24 24"
-            >
+
+          <a href="/seatview/" class="btn sidebar-btn text-start text-white d-flex align-items-center {{statusIM}}">
+            <svg xmlns="http://www.w3.org/2000/svg" fill="currentColor" viewBox="0 0 24 24">
               <circle cx="9" cy="7" r="4" />
               <path d="M17 11v1a3 3 0 0 1-6 0v-1a3 3 0 0 1 6 0z" />
               <path d="M2 20a7 7 0 0 1 14 0" />
@@ -88,36 +63,16 @@
             <span>Invigilator Management</span>
           </a>
 
-          <a
-            href="/seating-arrangement/"
-            type="button"
-            class="btn sidebar-btn text-start text-white d-flex align-items-center {{statusSA}}"
-            data-id="seating"
-          >
-            <svg
-              xmlns="http://www.w3.org/2000/svg"
-              fill="currentColor"
-              viewBox="0 0 24 24"
-            >
-              <path
-                d="M12 2a7 7 0 0 0-7 7c0 5 7 13 7 13s7-8 7-13a7 7 0 0 0-7-7z"
-              />
+          <a href="/seating-arrangement/" class="btn sidebar-btn text-start text-white d-flex align-items-center {{statusSA}}">
+            <svg xmlns="http://www.w3.org/2000/svg" fill="currentColor" viewBox="0 0 24 24">
+              <path d="M12 2a7 7 0 0 0-7 7c0 5 7 13 7 13s7-8 7-13a7 7 0 0 0-7-7z"/>
               <circle cx="12" cy="9" r="2" />
             </svg>
             <span>Seat Assignment</span>
           </a>
 
-          <a
-            href="/exam/"
-            type="button"
-            class="btn sidebar-btn text-start text-white d-flex align-items-center {{statusES}}"
-            data-id="exams"
-          >
-            <svg
-              xmlns="http://www.w3.org/2000/svg"
-              fill="currentColor"
-              viewBox="0 0 24 24"
-            >
+          <a href="/exam/" class="btn sidebar-btn text-start text-white d-flex align-items-center {{statusES}}">
+            <svg xmlns="http://www.w3.org/2000/svg" fill="currentColor" viewBox="0 0 24 24">
               <rect x="3" y="4" width="18" height="18" rx="2" ry="2" />
               <line x1="16" y1="2" x2="16" y2="6" />
               <line x1="8" y1="2" x2="8" y2="6" />
@@ -126,62 +81,52 @@
             <span>Exam Schedule</span>
           </a>
 
-          <a
-            href="/room-management/"
-            type="button"
-            class="btn sidebar-btn text-start text-white d-flex align-items-center {{statusRM}}"
-            data-id="rooms"
-          >
-            <svg
-              xmlns="http://www.w3.org/2000/svg"
-              fill="currentColor"
-              viewBox="0 0 24 24"
-            >
+          <a href="/room-management/" class="btn sidebar-btn text-start text-white d-flex align-items-center {{statusRM}}">
+            <svg xmlns="http://www.w3.org/2000/svg" fill="currentColor" viewBox="0 0 24 24">
               <rect x="3" y="7" width="18" height="14" rx="2" ry="2" />
               <line x1="3" y1="7" x2="21" y2="7" />
             </svg>
             <span>Room Management</span>
           </a>
 
-          <a
-            href="/news-management/"
-            type="button"
-            class="btn sidebar-btn text-start text-white d-flex align-items-center {{statusNM}}"
-            data-id="news"
-          >
-            <svg
-              xmlns="http://www.w3.org/2000/svg"
-              fill="currentColor"
-              viewBox="0 0 24 24"
-            >
+          <a href="/news-management/" class="btn sidebar-btn text-start text-white d-flex align-items-center {{statusNM}}">
+            <svg xmlns="http://www.w3.org/2000/svg" fill="currentColor" viewBox="0 0 24 24">
               <path d="M18 8a6 6 0 0 0-12 0c0 7-3 9-3 9h18s-3-2-3-9" />
               <path d="M13.73 21a2 2 0 0 1-3.46 0" />
             </svg>
             <span>News & Updates</span>
           </a>
 
-          <a
-            href="/analytics/"
-            type="button"
-            class="btn sidebar-btn text-start text-white d-flex align-items-center {{statusAN}}"
-            data-id="analytics"
-          >
-            <svg
-              xmlns="http://www.w3.org/2000/svg"
-              fill="currentColor"
-              viewBox="0 0 24 24"
-            >
+          <a href="/analytics/" class="btn sidebar-btn text-start text-white d-flex align-items-center {{statusAN}}">
+            <svg xmlns="http://www.w3.org/2000/svg" fill="currentColor" viewBox="0 0 24 24">
               <polyline points="22 12 16 12 14 15 10 9 6 13 2 9" />
             </svg>
             <span>Analytics</span>
           </a>
 
-         
+          <!-- Debar Management -->
+          <a href="/debar-management/" class="btn sidebar-btn text-start text-white d-flex align-items-center {{statusEB}}">
+            <svg xmlns="http://www.w3.org/2000/svg" fill="currentColor" viewBox="0 0 24 24">
+              <path fill="none" d="M0 0h24v24H0z"/>
+              <path fill="currentColor" d="M15 14c1.66 0 3-1.34 3-3s-1.34-3-3-3-3 1.34-3 3 1.34 3 3 3Zm-6 0c2.21 0 4-1.79 4-4S11.21 6 9 6 5 7.79 5 10s1.79 4 4 4Zm0 2c-2.67 0-8 1.34-8 4v1h14v-1c0-2.66-5.33-4-8-4Zm10.7-1.3-1.4-1.4L17 13.6l-1.99-1.99-1.4 1.4L15.6 15l-1.99 1.99 1.4 1.4L17 16.4l1.99 1.99 1.4-1.4L18.4 15l1.3-1.3z"/>
+            </svg>
+            <span>Debar</span>
+          </a>
+
+
+          <!-- Logout -->
+          <a href="/logout/" class="btn sidebar-btn text-start text-white d-flex align-items-center {{statusLK}}">
+            <svg xmlns="http://www.w3.org/2000/svg" fill="currentColor" viewBox="0 0 24 24">
+              <path d="M16 13v-2H7V8l-5 4 5 4v-3h9z" />
+              <path d="M20 3h-8v2h8v14h-8v2h8a2 2 0 0 0 2-2V5a2 2 0 0 0-2-2z"/>
+            </svg>
+            <span>Logout</span>
+          </a>
+
         </nav>
       </div>
     </div>
 
-    <!-- <script src="{% static 'sidebar.js' %}"></script> -->
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
   </body>
 </html>

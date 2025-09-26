@@ -62,7 +62,7 @@
 
         <!-- Sidebar -->
         <div id="sidebarWrapper" class="col-lg-2 d-none d-lg-block p-0 bg-white border-end">
-            {% include 'components/studentsidebar.html' %}
+            {% include 'components/studentsidebar.html' with statusAD="active" %}
         </div>
 
         <!-- Main Content -->
@@ -130,17 +130,19 @@
                 </div>
 
                 <!-- Announcements -->
-                <div class="glass-bg mt-4">
-                    <h5 class="fw-bold mb-3 text-secondary">
-                        <i class="bi bi-megaphone-fill me-2 text-warning"></i> Latest Announcements
-                    </h5>
-                    <div class="p-3 mb-2 rounded bg-light border">
-                        <strong>Exam Guidelines Released</strong><br />
-                        <small>Make sure to carry your hall ticket and a valid ID card.</small>
-                    </div>
-                    <div class="p-3 mb-2 rounded bg-light border">
-                        <strong>Lab Access Notice</strong><br />
-                        <small>Labs will be closed during the exam week for maintenance.</small>
+                <div class="row mt-4">
+                    <div class="col-6">
+                        <div class="section-box">
+                            <h5 class="fw-bold mb-3"><i class="bi bi-megaphone-fill me-2 text-warning"></i> Latest Announcements</h5>
+                            {% for announcement in announcements %}
+                            <div class="p-3 bg-light rounded news-item mb-2">
+                                <strong>{{ announcement.title }}</strong><br>
+                                <small class="text-muted">{{ announcement.content }}</small>
+                            </div>
+                            {% empty %}
+                            <p class="text-muted">No announcements available.</p>
+                            {% endfor %}
+                        </div>
                     </div>
                 </div>
 
