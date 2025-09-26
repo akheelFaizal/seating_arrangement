@@ -826,15 +826,13 @@ def invigilatorProfile(request):
 
     return render(request, "invigilator/invigilatorProfile.html", context)
 
-from django.shortcuts import render, redirect
-from django.contrib import messages
-from .models import CustomUser, Course, Department
 
 def signup(request):
     if request.method == "POST":
         role = request.POST.get("role")  # student or invigilator
         name = request.POST.get("name")
         password = request.POST.get("password")
+        print(role)
 
         if role == "student":
             roll_number = request.POST.get("roll_number")
@@ -854,7 +852,7 @@ def signup(request):
             # Create student user
             user = CustomUser.objects.create_user(
                 username=roll_number,
-                name=name,
+                first_name=name,
                 role="student",
                 course=course_obj,
                 department=dept_obj,
@@ -863,6 +861,7 @@ def signup(request):
             )
 
         elif role == "invigilator":
+            print("inside")
             employee_id = request.POST.get("employee_id")
             inv_department = request.POST.get("department_name")
 
@@ -872,10 +871,10 @@ def signup(request):
                 return redirect("signup")
 
             # Create invigilator user
-            user = CustomUser.objects.create_user(
+            CustomUser.objects.create_user(
                 username=employee_id,
-                name=name,
-                role="invigilator",
+                first_name=name,
+                role=role,
                 employee_id=employee_id,
                 invigilator_department=inv_department,
                 password=password,
@@ -895,10 +894,29 @@ def signup(request):
         "departments": departments,
     })
 
-
 def invigilator_management(request):
-    
-    return render(request, "admin/InvigilatorManagement.html")
+    # Prefetch rooms in a single query using select_related or annotate
+    invigilators = CustomUser.objects.filter(role="invigilator").select_related()
+
+    # Get all rooms with supervisors in one query
+    rooms = Room.objects.select_related('supervisor').all()
+    allrooms = Room.objects.all()
+    room_map = {room.supervisor_id: room.room_number for room in rooms if room.supervisor_id}
+
+    # Prepare data for template
+    data = [
+        {
+            'id': inv.id,
+            'name': inv.name or inv.username,
+            'email': inv.email,
+            'phone': inv.username,  # or a phone field if available
+            'assigned_room': room_map.get(inv.id),
+            'rooms':allrooms
+        }
+        for inv in invigilators
+    ]
+
+    return render(request, 'admin/InvigilatorManagement.html', {'invigilators': data})
 
 
 def add_session(request):
@@ -912,10 +930,42 @@ def add_session(request):
             return redirect('exam_schedule')
         messages.error(request, "Fill all the fields.")
         return redirect('exam_schedule')
+  
+def add_invigilator(request):
+    if request.method == "POST":
+        name = request.POST.get("name")
+        email = request.POST.get("email")
+        phone = request.POST.get("phone")
+        department = request.POST.get("department")
 
+        if email and CustomUser.objects.filter(email=email).exists():
+            messages.error(request, "An invigilator with this email already exists.")
+        else:
+            invigilator = CustomUser.objects.create(
+                username=email,  # use email as username
+                name=name,
+                email=email,
+                role="invigilator",
+                invigilator_department=department,
+            )
+            invigilator.set_password("invigilator123")  # default password
+            invigilator.save()
+            messages.success(request, "Invigilator added successfully.")
         
+        return redirect("invigilator_management")
         
 
-        
+def assign_invigilator_room(request, invigilator_id):
+    invigilator = get_object_or_404(CustomUser, id=invigilator_id, role="invigilator")
 
-        
+    if request.method == "POST":
+        room_id = request.POST.get("room")
+        if room_id:
+            room = get_object_or_404(Room, id=room_id)
+            # Remove invigilator from any previous room
+            Room.objects.filter(supervisor=invigilator).update(supervisor=None)
+            # Assign to selected room
+            room.supervisor = invigilator
+            room.save()
+            messages.success(request, f"{invigilator.name} assigned to {room.room_number}.")
+        return redirect("invigilator_management")

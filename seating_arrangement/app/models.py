@@ -77,8 +77,6 @@ class Invigilator(models.Model):
     def _str_(self):
         return self.name
 
-
-
 #exam details
     
 class ExamSession(models.Model):
@@ -105,7 +103,7 @@ class Exam(models.Model):
 class Room(models.Model):
     room_number = models.CharField(max_length=20, unique=True)
     capacity = models.PositiveIntegerField()
-    supervisor = models.ForeignKey('CustomUser', on_delete=models.SET_NULL, null=True, blank=True)
+    supervisor = models.ForeignKey('CustomUser', on_delete=models.SET_NULL, null=True, blank=True, related_name="room")
     STATUS_CHOICES = [
         ('active', 'Active'),
         ('inactive', 'Inactive'),

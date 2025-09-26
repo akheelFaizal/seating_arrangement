@@ -5,7 +5,10 @@ from . import views
 urlpatterns = [
 
 
-        # path("invigilators/", views.invigilator_management, name="invigilator_management"),
+        path("invigilators/", views.invigilator_management, name="invigilator_management"),
+        path("add/invigilators/", views.add_invigilator, name="add_invigilator"),
+        path("invigilators/assign/<int:invigilator_id>/", views.assign_invigilator_room, name="assign_invigilator_room"),
+
         # student
         # path('student/login/', views.StudentLogin, name='student_login'),
         path("student/login/", views.login_view, name="login"),
