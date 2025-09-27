@@ -1,6 +1,7 @@
 from collections import defaultdict
 from datetime import datetime
 from datetime import datetime, date, timedelta
+from django.core.mail import send_mail
 
 import csv
 import random
@@ -193,18 +194,9 @@ def StudentSeatview(request):
     return render(request, "student/StudentSeatView.html", context)
 
 
-
-
-
-
 def StudentResultView(request):
     return render(request, 'student/studentResultView.html')
 
-
-from django.shortcuts import render, get_object_or_404
-from django.utils.timezone import now
-from datetime import date
-from .models import Student, Seating
 
 def StudentExamDetail(request):
     # Get logged-in student
@@ -1205,9 +1197,10 @@ def invigilator_management(request):
     data = [
         {
             'id': inv.id,
-            'name': inv.name or inv.username,
+            'name': inv.name ,
+            'username': inv.username,
             'email': inv.email,
-            'phone': inv.username,  # or a phone field if available
+            'phone': inv.phone,  # or a phone field if available
             'assigned_room': room_map.get(inv.id)
         }
         for inv in invigilators
@@ -1230,8 +1223,11 @@ def add_session(request):
   
 def add_invigilator(request):
     if request.method == "POST":
+        username=request.POST.get("username")
+        emp_id = request.POST.get("eid")
         name = request.POST.get("name")
         email = request.POST.get("email")
+        password = request.POST.get('password')
         phone = request.POST.get("phone")
         department = request.POST.get("department")
 
@@ -1239,15 +1235,19 @@ def add_invigilator(request):
             messages.error(request, "An invigilator with this email already exists.")
         else:
             invigilator = CustomUser.objects.create(
-                username=email,  # use email as username
+                username=username,  # use email as username
+                employee_id=emp_id,
                 name=name,
+                password=password,
                 email=email,
+                phone=phone,
                 role="invigilator",
                 invigilator_department=department,
             )
             invigilator.set_password("invigilator123")  # default password
             invigilator.save()
             messages.success(request, "Invigilator added successfully.")
+            send_invigilator_credentials(email, username, password)
         
         return redirect("invigilator_management")
         
@@ -1276,3 +1276,21 @@ def reinstate_student(request, id):
         student.is_debarred = True
     student.save()
     return redirect('invigilator_management')
+
+from django.core.mail import send_mail
+from django.conf import settings
+
+def send_invigilator_credentials(email, username, password):
+    subject = "Your Invigilator Account Credentials"
+    message = f"""
+    Dear {username},
+
+    Your invigilator account has been created successfully.
+
+    Login details:
+    Username: {username}
+    Password: {password}
+
+    Please log in and change your password after first login.
+    """
+    send_mail(subject, message, settings.DEFAULT_FROM_EMAIL, [email])

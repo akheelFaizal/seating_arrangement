@@ -49,6 +49,7 @@
                   <thead class="table-light">
                     <tr>
                       <th>Name</th>
+                      <th>Username</th>
                       <th>Email</th>
                       <th>Phone</th>
                       <th>Assigned Room</th>
@@ -59,6 +60,7 @@
                     {% for inv in invigilators %}
                     <tr>
                       <td>{{ inv.name }}</td>
+                      <td>{{ inv.username }}</td>
                       <td>{{ inv.email }}</td>
                       <td>{{ inv.phone }}</td>
                       <td>
@@ -97,8 +99,8 @@
                   {% for student in debarred_students %}
                   <li class="list-group-item d-flex justify-content-between">
                     <span>
-                      Student Roll No: {{ student.roll_number }} {{student.id}} (Debarred by john
-                      doe)
+                      Student Roll No: {{ student.roll_number }} {{student.id}}
+                      (Debarred by john doe)
                     </span>
                     <a
                       href="{% url 'reinstate_student' student.id %}"
@@ -146,6 +148,16 @@
 
             <div class="modal-body">
               <div class="mb-3">
+                <label for="invId" class="form-label">Invigilator ID</label>
+                <input
+                  type="text"
+                  class="form-control"
+                  id="invId"
+                  name="eid"
+                  required
+                />
+              </div>
+              <div class="mb-3">
                 <label for="invName" class="form-label">Name</label>
                 <input
                   type="text"
@@ -156,12 +168,32 @@
                 />
               </div>
               <div class="mb-3">
+                <label for="invUName" class="form-label">Username</label>
+                <input
+                  type="text"
+                  class="form-control"
+                  id="invUName"
+                  name="username"
+                  required
+                />
+              </div>
+              <div class="mb-3">
                 <label for="invEmail" class="form-label">Email</label>
                 <input
                   type="email"
                   class="form-control"
                   id="invEmail"
                   name="email"
+                  required
+                />
+              </div>
+              <div class="mb-3">
+                <label for="invPass" class="form-label">Password</label>
+                <input
+                  type="password"
+                  class="form-control"
+                  id="invPass"
+                  name="password"
                   required
                 />
               </div>

@@ -54,6 +54,7 @@ class CustomUser(AbstractUser):
     employee_id = models.CharField(max_length=50, blank=True, null=True)
     invigilator_department = models.CharField(max_length=100, blank=True, null=True)
     profile_picture = models.ImageField(upload_to="invigilators/", blank=True, null=True)  # ✅ Only for invigilator
+    phone = models.CharField(max_length=200,blank=True, null=True)
     
     
     
