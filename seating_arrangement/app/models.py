@@ -54,6 +54,7 @@ class CustomUser(AbstractUser):
     employee_id = models.CharField(max_length=50, blank=True, null=True)
     invigilator_department = models.CharField(max_length=100, blank=True, null=True)
     profile_picture = models.ImageField(upload_to="invigilators/", blank=True, null=True)  # ✅ Only for invigilator
+    phone = models.CharField(max_length=200,blank=True, null=True)
     
     
     
@@ -61,10 +62,6 @@ class CustomUser(AbstractUser):
 
     def __str__(self):
         return f"{self.name or self.username} ({self.role})"
-
-
-
-
 
     
 class Student(models.Model):
@@ -90,8 +87,6 @@ class Invigilator(models.Model):
 
     def _str_(self):
         return self.name
-
-
 
 #exam details
     
@@ -119,7 +114,7 @@ class Exam(models.Model):
 class Room(models.Model):
     room_number = models.CharField(max_length=20, unique=True)
     capacity = models.PositiveIntegerField()
-    supervisor = models.ForeignKey('CustomUser', on_delete=models.SET_NULL, null=True, blank=True)
+    supervisor = models.ForeignKey('CustomUser', on_delete=models.SET_NULL, null=True, blank=True, related_name="room")
     STATUS_CHOICES = [
         ('active', 'Active'),
         ('inactive', 'Inactive'),

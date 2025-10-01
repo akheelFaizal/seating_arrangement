@@ -15,7 +15,7 @@ from .models import CustomUser
 class CustomUserAdmin(UserAdmin):
     # Show important fields in admin list
     list_display = (
-        "username", "name", "role", "course", "department", "year",
+        "username", "first_name", "role", "course", "department", "year",
         "employee_id", "invigilator_department", "is_staff"
     )
     search_fields = ("username", "name", "email", "employee_id")
@@ -23,14 +23,13 @@ class CustomUserAdmin(UserAdmin):
     # Add custom fields to the default fieldsets
     fieldsets = UserAdmin.fieldsets + (
         ("Academic info", {"fields": ("course", "department", "year")}),
-        ("Invigilator info", {"fields": ("role", "employee_id", "invigilator_department", "profile_picture")}),
+        ("Invigilator info", {"fields": ("role", "employee_id", "invigilator_department", "profile_picture", "phone")}),
     )
 
     add_fieldsets = UserAdmin.add_fieldsets + (
         ("Academic info", {"fields": ("course", "department", "year")}),
-        ("Invigilator info", {"fields": ("role", "employee_id", "invigilator_department", "profile_picture")}),
+        ("Invigilator info", {"fields": ("role", "employee_id", "invigilator_department", "profile_picture", "phone")}),
     )
-
 
 #student info
 

@@ -1,5 +1,7 @@
 from collections import defaultdict
-from datetime import date, timedelta
+from datetime import datetime
+from datetime import datetime, date, timedelta
+from django.core.mail import send_mail
 
 import csv
 import random
@@ -14,7 +16,7 @@ from django.shortcuts import render, redirect, get_object_or_404
 from django.utils.timezone import now
 
 from .models import *   
-
+from django.db.models import Count
 
 from django.shortcuts import render, redirect
 from django.contrib.auth import authenticate, login
@@ -36,6 +38,9 @@ from django.contrib import messages
 from django.shortcuts import render, redirect
 from django.contrib.auth import authenticate, login
 from django.contrib import messages
+
+from django.core.files.storage import default_storage
+
 
 def login_view(request):
     if request.method == "POST":
@@ -69,26 +74,10 @@ def login_view(request):
 
 
 
-
-
-
-from django.contrib.auth import logout
-from django.shortcuts import redirect
-
 def student_logout(request):
     logout(request)
     return redirect('login')  # Replace with your login URL name
 
-
-
-from django.shortcuts import render
-from django.utils.timezone import now
-from .models import Student, Room, Exam
-
-from django.shortcuts import render
-from django.utils.timezone import now
-from datetime import datetime
-from .models import Student, Room, Exam, ExamSession
 
 def index(request):
     total_students = Student.objects.count()
@@ -171,10 +160,6 @@ def StudentOverView(request):
     }
     return render(request, "student/studentOverView.html", context)
 
-from datetime import date
-from django.contrib.auth.decorators import login_required
-from django.shortcuts import get_object_or_404, render
-from .models import Student, Seating
 
 @login_required
 def StudentSeatview(request):
@@ -209,18 +194,9 @@ def StudentSeatview(request):
     return render(request, "student/StudentSeatView.html", context)
 
 
-
-
-
-
 def StudentResultView(request):
     return render(request, 'student/studentResultView.html')
 
-
-from django.shortcuts import render, get_object_or_404
-from django.utils.timezone import now
-from datetime import date
-from .models import Student, Seating
 
 def StudentExamDetail(request):
     # Get logged-in student
@@ -763,9 +739,6 @@ def remove_all_assignments(request):
     return redirect('seating_arrangement')
 
 
-from datetime import date
-
-
 def room_management(request):
     # Handle Add Room
     if request.method == "POST":
@@ -851,8 +824,6 @@ def news_reject(request, pk):
     news.save()
     return redirect("news_updates")
 
-from django.db.models import Count
-
 def analytics(request):
     # 1️⃣ Metrics
     total_students = Student.objects.count()
@@ -905,18 +876,6 @@ def analytics(request):
     return render(request, "admin/Analytics.html", context)
 
 #invigilators
-
-from django.shortcuts import render, redirect
-from django.contrib.auth.decorators import login_required
-from .models import CustomUser
-
-from django.shortcuts import render, redirect
-from django.contrib.auth.decorators import login_required
-from .models import CustomUser, Seating, Exam, Room
-from django.contrib.auth.decorators import login_required
-from django.shortcuts import render, redirect
-from .models import Room, Seating
-
 @login_required
 def invigilator_dashboard(request):
     user = request.user
@@ -948,18 +907,6 @@ def invigilator_dashboard(request):
 
     return render(request, 'invigilator/invigilatorOverview.html', context)
 
-
-from django.shortcuts import render, get_object_or_404, redirect
-from django.contrib import messages
-from .models import Student
-import csv
-from django.shortcuts import render, get_object_or_404, redirect
-from django.contrib import messages
-from .models import Student
-import csv
-from django.db.models import Q
-
-from django.db.models import Q
 
 def invigilatorSeatarrangement(request):
     # Base queryset
@@ -1091,10 +1038,6 @@ def invigilatorSeatarrangement(request):
     })
 
 
-from django.contrib.auth.decorators import login_required
-from django.shortcuts import render
-from .models import Room, Seating, Exam
-
 @login_required
 def invigilatorProfile(request):
     user = request.user
@@ -1138,16 +1081,12 @@ def invigilatorProfile(request):
     return render(request, "invigilator/invigilatorProfile.html", context)
 
 
-from django.shortcuts import render, redirect
-from django.contrib import messages
-from .models import CustomUser, Course, Department
-from django.core.files.storage import default_storage
-
 def signup(request):
     if request.method == "POST":
         role = request.POST.get("role")  # student or invigilator
         name = request.POST.get("name")
         password = request.POST.get("password")
+        print(role)
 
         if role == "student":
             roll_number = request.POST.get("roll_number")
@@ -1167,7 +1106,7 @@ def signup(request):
             # ✅ Create student user
             user = CustomUser.objects.create_user(
                 username=roll_number,
-                name=name,
+                first_name=name,
                 role="student",
                 course=course_obj,
                 department=dept_obj,
@@ -1176,6 +1115,7 @@ def signup(request):
             )
 
         elif role == "invigilator":
+            print("inside")
             employee_id = request.POST.get("employee_id")
             inv_department = request.POST.get("department_name")
             profile_picture = request.FILES.get("profile_picture")  # ✅ Handle file upload
@@ -1184,12 +1124,11 @@ def signup(request):
             if CustomUser.objects.filter(username=employee_id).exists():
                 messages.error(request, "Employee ID already registered.")
                 return redirect("signup")
-
             # ✅ Create invigilator user
             user = CustomUser.objects.create_user(
                 username=employee_id,
-                name=name,
-                role="invigilator",
+                first_name=name,
+                role=role,
                 employee_id=employee_id,
                 invigilator_department=inv_department,
                 profile_picture=profile_picture,  # save uploaded image
@@ -1211,9 +1150,7 @@ def signup(request):
     })
 
 
-from django.contrib.auth.decorators import login_required
-from django.shortcuts import render, redirect
-from django.contrib import messages
+
 
 @login_required
 def edit_invigilator_profile(request):
@@ -1246,8 +1183,30 @@ def edit_invigilator_profile(request):
 
 
 def invigilator_management(request):
-    
-    return render(request, "admin/InvigilatorManagement.html")
+    # Prefetch rooms in a single query using select_related or annotate
+    invigilators = CustomUser.objects.filter(role="invigilator").select_related()
+    debarred_students = Student.objects.filter(is_debarred=True)
+
+    # Get all rooms with supervisors in one query
+    rooms = Room.objects.select_related('supervisor').all()
+    allrooms = Room.objects.all()
+    print(allrooms)
+    room_map = {room.supervisor_id: room.room_number for room in rooms if room.supervisor_id}
+
+    # Prepare data for template
+    data = [
+        {
+            'id': inv.id,
+            'name': inv.name ,
+            'username': inv.username,
+            'email': inv.email,
+            'phone': inv.phone,  # or a phone field if available
+            'assigned_room': room_map.get(inv.id)
+        }
+        for inv in invigilators
+    ]
+
+    return render(request, 'admin/InvigilatorManagement.html', {'invigilators': data, 'rooms': allrooms, 'debarred_students':debarred_students})
 
 
 def add_session(request):
@@ -1261,10 +1220,77 @@ def add_session(request):
             return redirect('exam_schedule')
         messages.error(request, "Fill all the fields.")
         return redirect('exam_schedule')
+  
+def add_invigilator(request):
+    if request.method == "POST":
+        username=request.POST.get("username")
+        emp_id = request.POST.get("eid")
+        name = request.POST.get("name")
+        email = request.POST.get("email")
+        password = request.POST.get('password')
+        phone = request.POST.get("phone")
+        department = request.POST.get("department")
 
+        if email and CustomUser.objects.filter(email=email).exists():
+            messages.error(request, "An invigilator with this email already exists.")
+        else:
+            invigilator = CustomUser.objects.create(
+                username=username,  # use email as username
+                employee_id=emp_id,
+                name=name,
+                password=password,
+                email=email,
+                phone=phone,
+                role="invigilator",
+                invigilator_department=department,
+            )
+            invigilator.set_password("invigilator123")  # default password
+            invigilator.save()
+            messages.success(request, "Invigilator added successfully.")
+            send_invigilator_credentials(email, username, password)
         
+        return redirect("invigilator_management")
         
 
-        
+def assign_invigilator_room(request, invigilator_id):
+    invigilator = get_object_or_404(CustomUser, id=invigilator_id, role="invigilator")
 
-        
+    if request.method == "POST":
+        room_id = request.POST.get("room")
+        if room_id:
+            room = get_object_or_404(Room, id=room_id)
+            # Remove invigilator from any previous room
+            Room.objects.filter(supervisor=invigilator).update(supervisor=None)
+            # Assign to selected room
+            room.supervisor = invigilator
+            room.save()
+            messages.success(request, f"{invigilator.name} assigned to {room.room_number}.")
+        return redirect("invigilator_management")
+    
+def reinstate_student(request, id):
+    student = get_object_or_404(Student, id=id)
+
+    if student.is_debarred:
+        student.is_debarred = False
+    else:
+        student.is_debarred = True
+    student.save()
+    return redirect('invigilator_management')
+
+from django.core.mail import send_mail
+from django.conf import settings
+
+def send_invigilator_credentials(email, username, password):
+    subject = "Your Invigilator Account Credentials"
+    message = f"""
+    Dear {username},
+
+    Your invigilator account has been created successfully.
+
+    Login details:
+    Username: {username}
+    Password: {password}
+
+    Please log in and change your password after first login.
+    """
+    send_mail(subject, message, settings.DEFAULT_FROM_EMAIL, [email])
