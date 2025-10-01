@@ -7,6 +7,7 @@ urlpatterns = [
 
         # path("invigilators/", views.invigilator_management, name="invigilator_management"),
         # student
+        
         # path('student/login/', views.StudentLogin, name='student_login'),
         path("student/login/", views.login_view, name="login"),
         path('logout/', views.student_logout, name='student_logout'),
