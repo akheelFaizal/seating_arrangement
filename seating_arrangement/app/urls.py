@@ -27,8 +27,9 @@ urlpatterns = [
         path('seating-arrangement/',views.SeatingArrangement),
         path('exam/',views.ExamSchedule),
 
+        path("students/edit/", views.edit_student, name="edit_student"),
+        path("students/bulk-delete/", views.bulk_delete_students, name="bulk_delete_students"),
 
-        
         
 
         # admin

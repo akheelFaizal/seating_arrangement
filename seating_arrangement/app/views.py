@@ -226,6 +226,7 @@ def StudentExamDetail(request):
 
 def StudentManagement(request):
     departments = Department.objects.all()
+    courses = Course.objects.all()
 
     # Get filters from GET request
     dept_filter = request.GET.get("department")
@@ -275,6 +276,7 @@ def StudentManagement(request):
 
     return render(request, "admin/StudentManagement.html", {
         "departments": departments,
+        "courses": courses,
         "students": students,
         "selected_dept": dept_filter,
         "selected_year": year_filter,
@@ -282,6 +284,15 @@ def StudentManagement(request):
     })
 
 
+def bulk_delete_students(request):
+    if request.method == "POST":
+        ids = request.POST.getlist("selected_students")
+        if ids:
+            Student.objects.filter(id__in=ids).delete()
+            messages.success(request, f"Deleted {len(ids)} students successfully.")
+        else:
+            messages.warning(request, "No students selected.")
+    return redirect("student_management") 
 
 def SeatingArrangement(request):
     # Fetch all exams with related session info
@@ -1294,3 +1305,36 @@ def send_invigilator_credentials(email, username, password):
     Please log in and change your password after first login.
     """
     send_mail(subject, message, settings.DEFAULT_FROM_EMAIL, [email])
+
+
+
+def edit_student(request):
+    if request.method == "POST":
+        student_id = request.POST.get("student_id")
+        student = get_object_or_404(Student, id=student_id)
+
+        # Update fields
+        student.roll_number = request.POST.get("roll_number")
+        student.name = request.POST.get("name")
+
+        dept_id = request.POST.get("department")
+        course_id = request.POST.get("course")
+        year = request.POST.get("year")
+        is_debarred = request.POST.get("is_debarred")
+
+        if dept_id:
+            student.department = get_object_or_404(Department, id=dept_id)
+        if course_id:
+            student.course = get_object_or_404(Course, id=course_id)
+        if year:
+            student.year = int(year)
+
+        student.is_debarred = True if is_debarred else False
+
+        student.save()
+
+        messages.success(request, "Student details updated successfully ✅")
+        return redirect("student_management")  # <-- replace with your main student list view name
+
+    messages.error(request, "Invalid request ❌")
+    return redirect("student_management")
