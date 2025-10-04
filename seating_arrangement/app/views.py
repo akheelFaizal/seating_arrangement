@@ -1100,6 +1100,7 @@ def signup(request):
         print(role)
 
         if role == "student":
+            name = request.POST.get("name")
             roll_number = request.POST.get("roll_number")
             course_id = request.POST.get("course")
             department_id = request.POST.get("department")
@@ -1192,32 +1193,81 @@ def edit_invigilator_profile(request):
     })
 
 
+# def invigilator_management(request):
+#     # Prefetch rooms in a single query using select_related or annotate
+#     invigilators = CustomUser.objects.filter(role="invigilator").select_related()
+#     debarred_students = Student.objects.filter(is_debarred=True)
+
+#     # Get all rooms with supervisors in one query
+#     rooms = Room.objects.select_related('supervisor').all()
+#     allrooms = Room.objects.all()
+#     print(allrooms)
+#     room_map = {room.supervisor_id: room.room_number for room in rooms if room.supervisor_id}
+
+#     # Prepare data for template
+#     data = [
+#         {
+#             'id': inv.id,
+#             'name': inv.name ,
+#             'username': inv.username,
+#             'email': inv.email,
+#             'phone': inv.phone,  # or a phone field if available
+#             'assigned_room': room_map.get(inv.id)
+#         }
+#         for inv in invigilators
+#     ]
+
+#     return render(request, 'admin/InvigilatorManagement.html', {'invigilators': data, 'rooms': allrooms, 'debarred_students':debarred_students})
 
 def invigilator_management(request):
-    # Prefetch rooms in a single query using select_related or annotate
+    # Invigilator data
     invigilators = CustomUser.objects.filter(role="invigilator").select_related()
     debarred_students = Student.objects.filter(is_debarred=True)
+
+    # Student data
+    students = CustomUser.objects.filter(role="student").select_related('department', 'course')
 
     # Get all rooms with supervisors in one query
     rooms = Room.objects.select_related('supervisor').all()
     allrooms = Room.objects.all()
-    print(allrooms)
+
+    # Map supervisor_id → room_number
     room_map = {room.supervisor_id: room.room_number for room in rooms if room.supervisor_id}
 
-    # Prepare data for template
-    data = [
+    # Prepare invigilator data for template
+    invigilator_data = [
         {
             'id': inv.id,
-            'name': inv.name ,
+            'name': inv.name,
             'username': inv.username,
             'email': inv.email,
-            'phone': inv.phone,  # or a phone field if available
+            'phone': inv.phone,
             'assigned_room': room_map.get(inv.id)
         }
         for inv in invigilators
     ]
 
-    return render(request, 'admin/InvigilatorManagement.html', {'invigilators': data, 'rooms': allrooms, 'debarred_students':debarred_students})
+    # Prepare student data for template
+    student_data = [
+        {
+            'id': stu.id,
+            'name': stu.first_name,
+            'username': stu.username,
+            'email': stu.email,
+            'phone': stu.phone,
+            'department': stu.department.name if stu.department else None,
+            'course': stu.course.name if stu.course else None,
+            'year': stu.year
+        }
+        for stu in students
+    ]
+
+    return render(request, 'admin/InvigilatorManagement.html', {
+        'invigilators': invigilator_data,
+        'students': student_data,
+        'rooms': allrooms,
+        'debarred_students': debarred_students
+    })
 
 
 def add_session(request):
@@ -1338,3 +1388,60 @@ def edit_student(request):
 
     messages.error(request, "Invalid request ❌")
     return redirect("student_management")
+
+def student_add(request):
+    if request.method == "POST":
+        name = request.POST.get("name")
+        username = request.POST.get("username")
+        email = request.POST.get("email")
+        phone = request.POST.get("phone")
+        password = request.POST.get("password")
+        department_id = request.POST.get("department")
+        course_id = request.POST.get("course")
+        year = request.POST.get("year")
+
+        if not username or not password:
+            messages.error(request, "Username and password are required.")
+            return redirect('user_management')
+
+        if CustomUser.objects.filter(username=username).exists():
+            messages.warning(request, "Username already exists.")
+            return redirect('user_management')
+
+        if email and CustomUser.objects.filter(email=email).exists():
+            messages.warning(request, "Email already exists.")
+            return redirect('user_management')
+
+        department = Department.objects.filter(id=department_id).first() if department_id else None
+        course = Course.objects.filter(id=course_id).first() if course_id else None
+
+        CustomUser.objects.create(
+            name=name,
+            username=username,
+            email=email,
+            phone=phone,
+            password=make_password(password),
+            department=department,
+            course=course,
+            year=year or None,
+            role="student"
+        )
+
+        messages.success(request, f"Student '{name}' added successfully!")
+        return redirect('user_management')
+
+    return redirect('user_management')
+
+def delete_invigilator(request, id):
+    if request.method == "POST":
+        invigilator = get_object_or_404(CustomUser, id=id, role="invigilator")
+        invigilator.delete()
+        messages.success(request, "Invigilator deleted successfully.")
+    return redirect("invigilator_management")
+
+def delete_student_user(request, id):
+    if request.method == "POST":
+        student = get_object_or_404(CustomUser, id=id, role="student")
+        student.delete()
+    messages.success(request, "Student deleted successfully.")
+    return redirect("invigilator_management")
