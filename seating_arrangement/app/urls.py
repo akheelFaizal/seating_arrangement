@@ -71,7 +71,8 @@ urlpatterns = [
         path("invigilator/seatarrangement",views.invigilatorSeatarrangement,name="invigilatorseatarrangement"),
         path("invigilator/profile",views.invigilatorProfile,name="invigilatorprofile"),
         # path("invigilator/signup",views.invigilator_signup,name="invigilatorsignup")
-         path('invigilator/profile/edit/', views.edit_invigilator_profile, name='edit_invigilator_profile'),
+        path('invigilator/profile/edit/', views.edit_invigilator_profile, name='edit_invigilator_profile'),
+        path('invigilator/students/', views.invigilatorAssignedStudents, name="invigilator_assigned_students"),
 
 
 

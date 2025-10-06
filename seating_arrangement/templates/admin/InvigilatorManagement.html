@@ -87,36 +87,47 @@
             </div>
 
             <!-- Debarred Students -->
+            <!-- Debarred Students -->
             <div class="card shadow-sm">
-              <div class="card-header bg-danger text-white">
-                <i class="bi bi-person-x me-2"></i>Debarred Students
-              </div>
-              <div class="card-body">
-                <p class="text-muted">
-                  Below are the students debarred by invigilators:
-                </p>
-                <ul class="list-group">
-                  {% for student in debarred_students %}
-                  <li class="list-group-item d-flex justify-content-between">
-                    <span>
-                      Student Roll No: {{ student.roll_number }} {{student.id}}
-                      (Debarred by john doe)
-                    </span>
-                    <a
-                      href="{% url 'reinstate_student' student.id %}"
-                      class="btn btn-sm btn-success"
-                    >
-                      Re-admit
-                    </a>
-                  </li>
-                  {% empty %}
-                  <li class="list-group-item text-muted">
-                    No students have been debarred.
-                  </li>
-                  {% endfor %}
-                </ul>
-              </div>
+                <div class="card-header bg-danger text-white">
+                    <i class="bi bi-person-x me-2"></i>Debarred Students
+                </div>
+                <div class="card-body">
+                    <p class="text-muted">
+                        Below are the students debarred by invigilators or admins:
+                    </p>
+                    <ul class="list-group">
+                        {% for student in debarred_students %}
+                        <li class="list-group-item d-flex justify-content-between">
+                            <span>
+                                Student Roll No: {{ student.roll_number }} {{ student.id }}
+                                (Debarred by 
+                               {% if student.debarred_by %}
+                                  {{ student.debarred_by.name|default_if_none:student.debarred_by.username|default:student.debarred_by.username }}
+                                  {% if student.debarred_by.role == "admin" %}
+                                      (Admin)
+                                  {% elif student.debarred_by.role == "invigilator" %}
+                                      (Invigilator)
+                                  {% endif %}
+                              {% else %}
+                                  Unknown
+                              {% endif %}
+
+                                )
+                            </span>
+                            <a href="{% url 'reinstate_student' student.id %}" class="btn btn-sm btn-success">
+                                Re-admit
+                            </a>
+                        </li>
+                        {% empty %}
+                        <li class="list-group-item text-muted">
+                            No students have been debarred.
+                        </li>
+                        {% endfor %}
+                    </ul>
+                </div>
             </div>
+
           </div>
         </div>
       </div>

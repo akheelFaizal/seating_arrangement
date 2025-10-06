@@ -469,9 +469,10 @@ def assign_seats_by_date(request):
 
 
 
+
 def debarmanagement(request):
-     # Base queryset
-    students = Student.objects.all().select_related("course", "department")
+    # Base queryset
+    students = Student.objects.all().select_related("course", "department", "debarred_by")
     rooms = Room.objects.all()
 
     # Search
@@ -508,84 +509,43 @@ def debarmanagement(request):
                     roll_number = key.split("_", 1)[1]
                     student = get_object_or_404(Student, roll_number=roll_number)
 
-                    # Get or create seating record
                     seating, _ = Seating.objects.get_or_create(student=student, exam=Exam.objects.first())
 
-                    if key.startswith("seat_"):
-                        seat_value = value.strip()
-                        if seat_value and seating.seat_number != seat_value:
-                            seating.seat_number = seat_value
-                            updated_count += 1
+                    if key.startswith("seat_") and value.strip() and seating.seat_number != value.strip():
+                        seating.seat_number = value.strip()
+                        updated_count += 1
 
-                    if key.startswith("room_"):
-                        if value:
+                    if key.startswith("room_") and value:
+                        try:
                             room = Room.objects.get(room_number=value)
                             if seating.room != room:
                                 seating.room = room
                                 updated_count += 1
+                        except Room.DoesNotExist:
+                            continue
 
                     seating.save()
 
             messages.success(request, f"Seats/rooms updated for {updated_count} students.")
             return redirect("debar-management")
 
-        # 🚫 Debar single student
+        # 🚫 Single student debar
         for key in request.POST:
             if key.startswith("debar_"):
                 roll_number = key.replace("debar_", "")
                 student = get_object_or_404(Student, roll_number=roll_number)
                 student.is_debarred = True
+                student.debarred_by = request.user  # Track who debarred
                 student.save()
                 messages.warning(request, f"{student.name} has been debarred!")
                 return redirect("debar-management")
 
-        # 📂 Bulk CSV upload
-        if "csv_file" in request.FILES:
-            csv_file = request.FILES["csv_file"]
-            if not csv_file.name.endswith(".csv"):
-                messages.error(request, "Please upload a valid CSV file.")
-                return redirect("debar-management")
-
-            data = csv_file.read().decode("utf-8").splitlines()
-            reader = csv.DictReader(data)
-            csv_updated_count, debarred_count = 0, 0
-
-            for row in reader:
-                roll = row.get("roll_number")
-                seat = row.get("seat")
-                room_number = row.get("room")
-                debar = row.get("debarred", "").lower()
-
-                try:
-                    student = Student.objects.get(roll_number=roll)
-                    seating, _ = Seating.objects.get_or_create(student=student, exam=Exam.objects.first())
-
-                    if seat:
-                        seating.seat_number = seat
-                        csv_updated_count += 1
-                    if room_number:
-                        try:
-                            seating.room = Room.objects.get(room_number=room_number)
-                            csv_updated_count += 1
-                        except Room.DoesNotExist:
-                            pass
-                    if debar in ["yes", "true", "1"]:
-                        student.is_debarred = True
-                        debarred_count += 1
-
-                    student.save()
-                    seating.save()
-                except Student.DoesNotExist:
-                    continue
-
-            messages.success(
-                request,
-                f"CSV processed: Seats updated: {csv_updated_count}, Students debarred: {debarred_count}"
-            )
-            return redirect("debar-management")
+    # Only pass students who are debarred for the template section
+    debarred_students = students.filter(is_debarred=True)
 
     return render(request, 'admin/debarmanagement.html', {
         "students": students,
+        "debarred_students": debarred_students,
         "rooms": rooms,
         "courses": Course.objects.all(),
         "departments": Department.objects.all(),
@@ -596,6 +556,7 @@ def debarmanagement(request):
         "year_filter": year_filter,
         "debarred_filter": debarred_filter,
     })
+
 
 #invigilator 
 
@@ -907,7 +868,7 @@ def invigilator_dashboard(request):
 
     return render(request, 'invigilator/invigilatorOverview.html', context)
 
-
+@login_required
 def invigilatorSeatarrangement(request):
     # Base queryset
     students = Student.objects.all().select_related("course", "department")
@@ -948,8 +909,11 @@ def invigilatorSeatarrangement(request):
                     student = get_object_or_404(Student, roll_number=roll_number)
 
                     # Get or create seating record
-                    seating, _ = Seating.objects.get_or_create(student=student, exam=Exam.objects.first()
-                                                               ,defaults={"seat_number": 0, "room": rooms.first()})
+                    seating, _ = Seating.objects.get_or_create(
+                        student=student, 
+                        exam=Exam.objects.first(),
+                        defaults={"seat_number": 0, "room": rooms.first()}
+                    )
 
                     if key.startswith("seat_"):
                         seat_value = value.strip()
@@ -975,54 +939,10 @@ def invigilatorSeatarrangement(request):
                 roll_number = key.replace("debar_", "")
                 student = get_object_or_404(Student, roll_number=roll_number)
                 student.is_debarred = True
+                student.debarred_by = request.user
                 student.save()
                 messages.warning(request, f"{student.name} has been debarred!")
                 return redirect("invigilatorseatarrangement")
-
-        # 📂 Bulk CSV upload
-        if "csv_file" in request.FILES:
-            csv_file = request.FILES["csv_file"]
-            if not csv_file.name.endswith(".csv"):
-                messages.error(request, "Please upload a valid CSV file.")
-                return redirect("invigilatorseatarrangement")
-
-            data = csv_file.read().decode("utf-8").splitlines()
-            reader = csv.DictReader(data)
-            csv_updated_count, debarred_count = 0, 0
-
-            for row in reader:
-                roll = row.get("roll_number")
-                seat = row.get("seat")
-                room_number = row.get("room")
-                debar = row.get("debarred", "").lower()
-
-                try:
-                    student = Student.objects.get(roll_number=roll)
-                    seating, _ = Seating.objects.get_or_create(student=student, exam=Exam.objects.first())
-
-                    if seat:
-                        seating.seat_number = seat
-                        csv_updated_count += 1
-                    if room_number:
-                        try:
-                            seating.room = Room.objects.get(room_number=room_number)
-                            csv_updated_count += 1
-                        except Room.DoesNotExist:
-                            pass
-                    if debar in ["yes", "true", "1"]:
-                        student.is_debarred = True
-                        debarred_count += 1
-
-                    student.save()
-                    seating.save()
-                except Student.DoesNotExist:
-                    continue
-
-            messages.success(
-                request,
-                f"CSV processed: Seats updated: {csv_updated_count}, Students debarred: {debarred_count}"
-            )
-            return redirect("invigilatorseatarrangement")
 
     return render(request, 'invigilator/invigilatorSeatarrangement.html', {
         "students": students,
@@ -1036,7 +956,6 @@ def invigilatorSeatarrangement(request):
         "year_filter": year_filter,
         "debarred_filter": debarred_filter,
     })
-
 
 @login_required
 def invigilatorProfile(request):
@@ -1080,63 +999,34 @@ def invigilatorProfile(request):
 
     return render(request, "invigilator/invigilatorProfile.html", context)
 
-
 def signup(request):
     if request.method == "POST":
-        role = request.POST.get("role")  # student or invigilator
         name = request.POST.get("name")
         password = request.POST.get("password")
-        print(role)
+        roll_number = request.POST.get("roll_number")
+        course_id = request.POST.get("course")
+        department_id = request.POST.get("department")
+        year = request.POST.get("year")
 
-        if role == "student":
-            roll_number = request.POST.get("roll_number")
-            course_id = request.POST.get("course")
-            department_id = request.POST.get("department")
-            year = request.POST.get("year")
-
-            # Prevent duplicate roll numbers
-            if CustomUser.objects.filter(username=roll_number).exists():
-                messages.error(request, "Roll number already registered.")
-                return redirect("signup")
-
-            # Get related course and department
-            course_obj = Course.objects.get(id=course_id)
-            dept_obj = Department.objects.get(id=department_id)
-
-            # ✅ Create student user
-            user = CustomUser.objects.create_user(
-                username=roll_number,
-                first_name=name,
-                role="student",
-                course=course_obj,
-                department=dept_obj,
-                year=year,
-                password=password,
-            )
-
-        elif role == "invigilator":
-            print("inside")
-            employee_id = request.POST.get("employee_id")
-            inv_department = request.POST.get("department_name")
-            profile_picture = request.FILES.get("profile_picture")  # ✅ Handle file upload
-
-            # Prevent duplicate employee IDs
-            if CustomUser.objects.filter(username=employee_id).exists():
-                messages.error(request, "Employee ID already registered.")
-                return redirect("signup")
-            # ✅ Create invigilator user
-            user = CustomUser.objects.create_user(
-                username=employee_id,
-                first_name=name,
-                role=role,
-                employee_id=employee_id,
-                invigilator_department=inv_department,
-                profile_picture=profile_picture,  # save uploaded image
-                password=password,
-            )
-        else:
-            messages.error(request, "Invalid role selected.")
+        # Prevent duplicate roll numbers
+        if CustomUser.objects.filter(username=roll_number).exists():
+            messages.error(request, "Roll number already registered.")
             return redirect("signup")
+
+        # Get related course and department
+        course_obj = Course.objects.get(id=course_id)
+        dept_obj = Department.objects.get(id=department_id)
+
+        # ✅ Create student user
+        user = CustomUser.objects.create_user(
+            username=roll_number,
+            first_name=name,
+            role="student",
+            course=course_obj,
+            department=dept_obj,
+            year=year,
+            password=password,
+        )
 
         messages.success(request, "Account created successfully. Please login.")
         return redirect("login")
@@ -1148,8 +1038,6 @@ def signup(request):
         "courses": courses,
         "departments": departments,
     })
-
-
 
 
 @login_required
@@ -1223,11 +1111,11 @@ def add_session(request):
   
 def add_invigilator(request):
     if request.method == "POST":
-        username=request.POST.get("username")
+        username = request.POST.get("username")
         emp_id = request.POST.get("eid")
         name = request.POST.get("name")
         email = request.POST.get("email")
-        password = request.POST.get('password')
+        password = request.POST.get("password")
         phone = request.POST.get("phone")
         department = request.POST.get("department")
 
@@ -1235,19 +1123,20 @@ def add_invigilator(request):
             messages.error(request, "An invigilator with this email already exists.")
         else:
             invigilator = CustomUser.objects.create(
-                username=username,  # use email as username
+                username=username,
                 employee_id=emp_id,
-                name=name,
-                password=password,
+                first_name=name,
                 email=email,
                 phone=phone,
                 role="invigilator",
                 invigilator_department=department,
             )
-            invigilator.set_password("invigilator123")  # default password
+            invigilator.set_password(password)  # use form password
             invigilator.save()
             messages.success(request, "Invigilator added successfully.")
+
             send_invigilator_credentials(email, username, password)
+
         
         return redirect("invigilator_management")
         
@@ -1294,3 +1183,33 @@ def send_invigilator_credentials(email, username, password):
     Please log in and change your password after first login.
     """
     send_mail(subject, message, settings.DEFAULT_FROM_EMAIL, [email])
+
+@login_required
+def invigilatorAssignedStudents(request):
+        user = request.user
+        # Ensure user is an invigilator
+        if user.role != "invigilator":
+            messages.error(request, "Access denied. Only invigilators can access this page.")
+            return redirect("login")
+
+        # Get the room assigned to this invigilator
+        try:
+            room = Room.objects.get(supervisor=user)
+        except Room.DoesNotExist:
+            room = None
+
+        students = []
+        if room:
+            students = Seating.objects.filter(room=room).select_related("student", "exam")
+
+            # Optional search filter by student name or roll number
+            query = request.GET.get("search")
+            if query:
+                students = students.filter(student__name__icontains=query) | students.filter(student__roll_number__icontains=query)
+
+        context = {
+            "user": user,
+            "room": room,
+            "students": students,
+        }
+        return render(request, "invigilator/assignedstudent.html", context)

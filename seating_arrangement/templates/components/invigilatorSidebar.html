@@ -45,11 +45,6 @@
         <span>Room Details</span>
       </a>
 
-      <a href="#exam-notifications"
-         class="btn sidebar-btn text-start text-white d-flex align-items-center {{statusEN}}">
-        <i class="bi bi-bell-fill me-2"></i>
-        <span>Exam Notifications</span>
-      </a>
 
       <a href="/invigilator/profile"
          class="btn sidebar-btn text-start text-white d-flex align-items-center {{statusPR}}">
@@ -57,8 +52,8 @@
         <span>Profile</span>
       </a>
 
-      <a href="#allotted-students"
-         class="btn sidebar-btn text-start text-white d-flex align-items-center {{statusAS}}">
+      <a href="{% url 'invigilator_assigned_students' %}"
+         class="btn sidebar-btn text-start text-white d-flex align-items-center {{statusOS}}">
         <i class="bi bi-people-fill me-2"></i>
         <span>Allotted Room Students</span>
       </a>

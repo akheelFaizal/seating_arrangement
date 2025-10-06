@@ -74,6 +74,13 @@ class Student(models.Model):
         default=1
     )
     is_debarred = models.BooleanField(default=False)
+    debarred_by = models.ForeignKey(
+        CustomUser,
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name="debarred_students"
+    )
     def _str_(self):
         return f"{self.name} ({self.roll_number})"
     

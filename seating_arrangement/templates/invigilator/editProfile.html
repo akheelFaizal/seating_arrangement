@@ -15,14 +15,14 @@
     <div class="col-md-6">
       <div class="card shadow-sm p-4">
         <h4 class="mb-4">Edit Profile</h4>
-
+         
         <form method="POST" enctype="multipart/form-data">
           {% csrf_token %}
 
           <!-- Name -->
           <div class="mb-3">
             <label class="form-label">Full Name</label>
-            <input type="text" class="form-control" name="name" value="{{ user.name }}" required>
+            <input type="text" class="form-control" name="name" value="{{ user.username }}" required>
           </div>
 
           <!-- Department -->
