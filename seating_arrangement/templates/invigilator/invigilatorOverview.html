@@ -81,33 +81,7 @@
                 </div>
 
                 <!-- Allotted Room Students -->
-                <div class="glass-bg">
-                    <h5 class="fw-bold mb-4 text-secondary">Allotted Room Students</h5>
-                    <table class="table table-striped">
-                        <thead>
-                            <tr>
-                                <th>Roll Number</th>
-                                <th>Name</th>
-                                <th>Subject</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            {% if students %}
-                                {% for seat in students %}
-                                    <tr>
-                                        <td>{{ seat.student.username }}</td>
-                                        <td>{{ seat.student.name }}</td>
-                                        <td>{{ seat.exam.subject_name }}</td>
-                                    </tr>
-                                {% endfor %}
-                            {% else %}
-                                <tr>
-                                    <td colspan="3" class="text-center text-muted">No students assigned.</td>
-                                </tr>
-                            {% endif %}
-                        </tbody>
-                    </table>
-                </div>
+                
 
             </div> <!-- container-fluid -->
         </div> <!-- mainContent -->
