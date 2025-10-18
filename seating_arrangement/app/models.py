@@ -14,14 +14,14 @@ from django.contrib.auth.hashers import make_password
 class Department(models.Model):
     name = models.CharField(max_length=100)
 
-    def _str_(self):
+    def __str__(self):
         return self.name
 
 class Course(models.Model):
     name = models.CharField(max_length=100)
     department = models.ForeignKey(Department, on_delete=models.CASCADE)
     
-    def _str_(self):
+    def __str__(self):
         return self.name
 
 
@@ -81,7 +81,7 @@ class Student(models.Model):
         blank=True,
         related_name="debarred_students"
     )
-    def _str_(self):
+    def __str__(self):
         return f"{self.name} ({self.roll_number})"
     
 
@@ -92,7 +92,7 @@ class Invigilator(models.Model):
     phone = models.CharField(max_length=15, blank=True)
     email = models.EmailField(unique=True)
 
-    def _str_(self):
+    def __str__(self):
         return self.name
 
 #exam details
@@ -109,10 +109,10 @@ class ExamSession(models.Model):
 class Exam(models.Model):
     subject_code = models.CharField(max_length=20)
     subject_name = models.CharField(max_length=100)
-    department = models.ForeignKey(Department, on_delete=models.CASCADE)
+    department = models.ManyToManyField(Department, related_name="exams")  # ✅ change here
     session = models.ForeignKey(ExamSession, on_delete=models.CASCADE, related_name="exams", default=1)
 
-    def _str_(self):
+    def __str__(self):
         return self.subject_name
 
 
@@ -178,7 +178,7 @@ class NewsUpdate(models.Model):
     status = models.CharField(max_length=10, choices=STATUS_CHOICES, default='pending')
     created_at = models.DateTimeField(default=timezone.now)
 
-    def _str_(self):
+    def __str__(self):
         return self.title
     
 class Debarring(models.Model):

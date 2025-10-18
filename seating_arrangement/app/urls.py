@@ -36,16 +36,16 @@ urlpatterns = [
     path("students/bulk-delete/", views.bulk_delete_students, name="bulk_delete_students"),
     path('students/<int:student_id>/delete/', views.delete_student, name='delete_student'),
 
-        # student
-        
-        # path('student/login/', views.StudentLogin, name='student_login'),
-        path("student/login/", views.login_view, name="login"),
-        path('logout/', views.student_logout, name='student_logout'),
-        path('student/overview/', views.StudentOverView, name='student_overview'),
-        path('student/seatview/', views.StudentSeatview, name='student_seatview'),
-        path('student/examdetail/', views.StudentExamDetail, name='student_examdetail'),
-        # path('student/signupaction',views.StudentSignupAction),
-        path("",views.signup, name="signup"),
+    # student
+    
+    # path('student/login/', views.StudentLogin, name='student_login'),
+    path("student/login/", views.login_view, name="login"),
+    path('logout/', views.student_logout, name='student_logout'),
+    path('student/overview/', views.StudentOverView, name='student_overview'),
+    path('student/seatview/', views.StudentSeatview, name='student_seatview'),
+    path('student/examdetail/', views.StudentExamDetail, name='student_examdetail'),
+    # path('student/signupaction',views.StudentSignupAction),
+    path("",views.signup, name="signup"),
 
     # -----------------------
     # Admin Management
@@ -60,11 +60,12 @@ urlpatterns = [
     # Upload and add
     path('upload_students/', views.upload_students, name='upload_students'),
     path('add_room/', views.add_room, name='add_room'),
+    path('delete-news/<int:news_id>/', views.delete_news, name='delete_news'),
     path("add-exam/", views.add_exam, name="add_exam"),
 
     # Edit and Delete
     path('edit-exam/<int:exam_id>/', views.edit_exam, name='edit_exam'),
-    path('delete-exam/<int:exam_id>/', views.delete_exam, name='delete_exam'),
+    path('delete-exam/<int:exam_id>/<int:department_id>/', views.delete_exam, name='delete_exam'),
     path('room/<int:room_id>/map/', views.seating_map_detail, name='seating_map_detail'),
     path('seating/assign_by_date/', views.assign_seats_by_date, name='assign_seats_by_date'),
     path('seating/remove_all/', views.remove_all_assignments, name='remove_all_assignments'),

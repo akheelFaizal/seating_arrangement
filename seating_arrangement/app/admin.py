@@ -65,13 +65,15 @@ class InvigilatorAdmin(admin.ModelAdmin):
 
 @admin.register(Exam)
 class ExamAdmin(admin.ModelAdmin):
-    list_display = ['subject_code', 'subject_name', 'department']
-    list_filter = ['department']
+    list_display = ['subject_code', 'subject_name', 'get_departments']
     search_fields = ['subject_name', 'subject_code']
 
+    def get_departments(self, obj):
+        """Display all related departments as a comma-separated list."""
+        return ", ".join(dept.name for dept in obj.department.all())
+    get_departments.short_description = "Departments"
 
 #room info
-
 @admin.register(Room)
 class RoomAdmin(admin.ModelAdmin):
     list_display = ['id', 'room_number', 'capacity', 'supervisor']

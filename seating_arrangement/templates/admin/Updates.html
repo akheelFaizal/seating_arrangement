@@ -78,11 +78,19 @@
                     <div class="row g-4">
                         {% for news in approved_news %}
                         <div class="col-md-6">
-                            <div class="news-banner hover-shadow">
+                            <div class="news-banner hover-shadow position-relative p-3 border rounded">
                                 <h6>{{ news.title }}</h6>
                                 <p class="mb-1 small">{{ news.posted_by|title }} | {{ news.created_at|date:"d M Y" }}</p>
                                 <p>{{ news.content }}</p>
                                 <span class="badge bg-success badge-status">Approved</span>
+
+                                <!-- 🗑 Delete anchor button -->
+                                <a href="{% url 'delete_news' news.id %}"
+                                class="btn btn-sm btn-outline-danger position-absolute top-0 end-0 m-2"
+                                title="Delete this news"
+                                onclick="return confirm('Are you sure you want to delete this news item?');">
+                                    <i class="bi bi-trash"></i>
+                                </a>
                             </div>
                         </div>
                         {% empty %}
@@ -90,6 +98,7 @@
                         {% endfor %}
                     </div>
                 </div>
+
 
             </div>
         </div>

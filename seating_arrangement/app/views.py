@@ -296,7 +296,7 @@ def bulk_delete_students(request):
 
 def SeatingArrangement(request):
     # Fetch all exams with related session info
-    exams = Exam.objects.select_related('department', 'session').all().order_by('session__date')
+    exams = Exam.objects.select_related('session').prefetch_related('department').all().order_by('session__date')
 
     # Fetch all rooms
     rooms = Room.objects.prefetch_related(
@@ -327,38 +327,69 @@ def SeatingArrangement(request):
         'rooms_by_date': rooms_by_date,  # optional, for server-side filtering if needed
     })
 
+
 def ExamSchedule(request):
     departments = Department.objects.all()
-    sessions = ExamSession.objects.all()  # Ensure sessions exist
-    exams = Exam.objects.all().select_related('session', 'department')  # Efficient queries
+    sessions = ExamSession.objects.all()
+    
+    exams = Exam.objects.all().prefetch_related('department', 'session')
+    print(f"Total exams found: {exams.count()}")  # ✅ Debug: number of exams
 
     # Group exams by department
     dept_exams = defaultdict(list)
     for exam in exams:
-        dept_exams[exam.department].append(exam)
+        dept_list = list(exam.department.all())
+        print(f"Exam: {exam.subject_name}, Departments: {[d.name for d in dept_list]}")  # ✅ Debug: which depts each exam belongs to
+        for dept in dept_list:
+            dept_exams[dept].append(exam)
 
-    # Convert defaultdict to normal dict
-    dept_exams = dict(dept_exams)
+    print(f"Departments with exams: {[d.name for d in dept_exams.keys()]}")  # ✅ Debug: which departments have exams
 
     context = {
         'departments': departments,
         'sessions': sessions,
-        'dept_exams': dept_exams
+        'dept_exams': dict(dept_exams)
     }
     return render(request, 'admin/ExamSchedule.html', context)
-
-
 # functionalities   
 
+# def upload_students(request):
+#     if request.method == "POST" and request.FILES.getlist("files"):
+#         files = request.FILES.getlist("files")
+        
+#         for csv_file in files:
+#             decoded_file = csv_file.read().decode("utf-8").splitlines()
+#             reader = csv.DictReader(decoded_file)
+            
+#             for row in reader:
+#                 dept, _ = Department.objects.get_or_create(name=row['Department'])
+#                 course, _ = Course.objects.get_or_create(name=row['Course'], department=dept)
+#                 Student.objects.update_or_create(
+#                     roll_number=row['Roll Number'],
+#                     defaults={
+#                         'name': row['Name'],
+#                         'department': dept,
+#                         'course': course
+#                     }
+#                 )
+#         messages.success(request, "All student files uploaded successfully!")  
+#     else:
+#         messages.error(request, "No files were selected for upload!")          
+    
+#     return redirect("seating_arrangement")
 def upload_students(request):
     if request.method == "POST" and request.FILES.getlist("files"):
         files = request.FILES.getlist("files")
-        
+
         for csv_file in files:
-            decoded_file = csv_file.read().decode("utf-8").splitlines()
+            # Decode with utf-8-sig to remove BOM
+            decoded_file = csv_file.read().decode("utf-8-sig").splitlines()
             reader = csv.DictReader(decoded_file)
-            
+
             for row in reader:
+                # Clean up extra spaces just in case
+                row = {k.strip(): v.strip() for k, v in row.items()}
+
                 dept, _ = Department.objects.get_or_create(name=row['Department'])
                 course, _ = Course.objects.get_or_create(name=row['Course'], department=dept)
                 Student.objects.update_or_create(
@@ -369,12 +400,12 @@ def upload_students(request):
                         'course': course
                     }
                 )
-        messages.success(request, "All student files uploaded successfully!")  
-    else:
-        messages.error(request, "No files were selected for upload!")          
-    
-    return redirect("seating_arrangement")
 
+        messages.success(request, "All student files uploaded successfully!")
+    else:
+        messages.error(request, "No files were selected for upload!")
+
+    return redirect("seating_arrangement")
 
 def add_room(request):
     if request.method == "POST":
@@ -386,6 +417,98 @@ def add_room(request):
         messages.success(request, f"Room {room_number} added successfully!")   
     
     return redirect("seating_arrangement")
+
+
+# def assign_seats_by_date(request):
+#     if request.method == "POST":
+#         date = request.POST.get('date')
+#         exams = Exam.objects.filter(session__date=date)
+#         rooms = list(Room.objects.filter(status='active'))
+
+#         if not exams:
+#             messages.error(request, f"No exams scheduled on {date}.")
+#             return redirect('seating_arrangement')
+#         if not rooms:
+#             messages.error(request, "No active rooms available.")
+#             return redirect('seating_arrangement')
+
+#         for exam in exams:
+#             # Clear old seating for this exam
+#             Seating.objects.filter(exam=exam).delete()
+
+#             # Fetch students only for this exam’s department
+#             departments = exam.department.all()  # queryset of departments
+#             students = list(
+#                     Student.objects.filter(
+#                         course__department__in=departments
+#                     ).order_by('roll_number')
+#                 )
+
+#             print(f"Exam: {exam.subject_name}, Dept: {exam.department}, Students: {len(students)}")
+
+#             # Group students by (course, dept, year)
+#             class_groups = defaultdict(list)
+#             for student in students:
+#                 class_groups[(student.course, student.department, student.year)].append(student)
+
+#             # Round-robin distribution (interleave groups)
+#             distributed_students = []
+#             while any(class_groups.values()):
+#                 for key in list(class_groups.keys()):
+#                     if class_groups[key]:
+#                         distributed_students.append(class_groups[key].pop(0))
+
+#             # Shuffle once for randomness
+#             random.shuffle(distributed_students)
+
+#             # Seat assignment
+#             student_index = 0
+#             for room in rooms:
+#                 bench = []
+#                 for seat_number in range(1, room.capacity + 1):
+#                     if student_index >= len(distributed_students):
+#                         break
+
+#                     student = distributed_students[student_index]
+
+#                     # Prevent consecutive same group on same bench
+#                     if bench and (
+#                         bench[-1].course == student.course and
+#                         bench[-1].department == student.department and
+#                         bench[-1].year == student.year
+#                     ):
+#                         swap_index = student_index + 1
+#                         while swap_index < len(distributed_students):
+#                             next_student = distributed_students[swap_index]
+#                             if (
+#                                 bench[-1].course != next_student.course or
+#                                 bench[-1].department != next_student.department or
+#                                 bench[-1].year != next_student.year
+#                             ):
+#                                 # Swap them
+#                                 distributed_students[student_index], distributed_students[swap_index] = \
+#                                     distributed_students[swap_index], distributed_students[student_index]
+#                                 student = distributed_students[student_index]
+#                                 break
+#                             swap_index += 1
+#                         # if no swap found, assign anyway
+
+#                     # Create seating record
+#                     Seating.objects.create(
+#                         student=student,
+#                         exam=exam,
+#                         room=room,
+#                         seat_number=seat_number
+#                     )
+
+#                     bench.append(student)
+#                     if len(bench) == room.bench_capacity:
+#                         bench = []  # reset for new bench
+
+#                     student_index += 1
+
+#         messages.success(request, f"Seats assigned for all exams on {date}")
+#     return redirect('seating_arrangement')
 
 
 def assign_seats_by_date(request):
@@ -401,35 +524,46 @@ def assign_seats_by_date(request):
             messages.error(request, "No active rooms available.")
             return redirect('seating_arrangement')
 
-        for exam in exams:
-            # Clear old seating for this exam
-            Seating.objects.filter(exam=exam).delete()
+        total_room_capacity = sum(room.capacity for room in rooms)
 
-            # Fetch students only for this exam’s department
+        for exam in exams:
+            # Fetch students for exam's department
+            departments = exam.department.all()
             students = list(
                 Student.objects.filter(
-                    course__department=exam.department
+                    course__department__in=departments
                 ).order_by('roll_number')
             )
 
-            print(f"Exam: {exam.subject_name}, Dept: {exam.department}, Students: {len(students)}")
+            print(f"Exam: {exam.subject_name}, Departments: {departments}, Students: {len(students)}")
+
+            # ✅ Check if total students exceed available seats
+            if len(students) > total_room_capacity:
+                messages.error(
+                    request,
+                    f"Room capacity exceeded for exam '{exam.subject_name}'. "
+                    f"Total students: {len(students)}, Available seats: {total_room_capacity}."
+                )
+                return redirect('seating_arrangement')
+
+            # Clear old seating for this exam
+            Seating.objects.filter(exam=exam).delete()
 
             # Group students by (course, dept, year)
             class_groups = defaultdict(list)
             for student in students:
                 class_groups[(student.course, student.department, student.year)].append(student)
 
-            # Round-robin distribution (interleave groups)
+            # Round-robin distribution
             distributed_students = []
             while any(class_groups.values()):
                 for key in list(class_groups.keys()):
                     if class_groups[key]:
                         distributed_students.append(class_groups[key].pop(0))
 
-            # Shuffle once for randomness
             random.shuffle(distributed_students)
 
-            # Seat assignment
+            # Start assigning seats
             student_index = 0
             for room in rooms:
                 bench = []
@@ -439,7 +573,7 @@ def assign_seats_by_date(request):
 
                     student = distributed_students[student_index]
 
-                    # Prevent consecutive same group on same bench
+                    # Prevent consecutive same group on the same bench
                     if bench and (
                         bench[-1].course == student.course and
                         bench[-1].department == student.department and
@@ -453,15 +587,12 @@ def assign_seats_by_date(request):
                                 bench[-1].department != next_student.department or
                                 bench[-1].year != next_student.year
                             ):
-                                # Swap them
                                 distributed_students[student_index], distributed_students[swap_index] = \
                                     distributed_students[swap_index], distributed_students[student_index]
                                 student = distributed_students[student_index]
                                 break
                             swap_index += 1
-                        # if no swap found, assign anyway
 
-                    # Create seating record
                     Seating.objects.create(
                         student=student,
                         exam=exam,
@@ -471,13 +602,11 @@ def assign_seats_by_date(request):
 
                     bench.append(student)
                     if len(bench) == room.bench_capacity:
-                        bench = []  # reset for new bench
-
+                        bench = []
                     student_index += 1
 
         messages.success(request, f"Seats assigned for all exams on {date}")
     return redirect('seating_arrangement')
-
 
 
 
@@ -575,7 +704,6 @@ def debarmanagement(request):
 def teacheroverview(request):
     return render(request, 'invigilator/teachersoverview.html')
 
-
 def add_exam(request):
     departments = Department.objects.all()
     sessions = ExamSession.objects.all()
@@ -583,18 +711,20 @@ def add_exam(request):
     if request.method == "POST":
         subject_code = request.POST.get("subject_code")
         subject_name = request.POST.get("subject_name")
-        department_id = request.POST.get("department")
+        department_ids = request.POST.getlist("department")  # ✅ getlist for multiple selection
         session_id = request.POST.get("session")
 
-        department = Department.objects.get(id=department_id)
         session = ExamSession.objects.get(id=session_id)
 
-        Exam.objects.create(
+        # Create exam first (without departments)
+        exam = Exam.objects.create(
             subject_code=subject_code,
             subject_name=subject_name,
-            department=department,
             session=session
         )
+
+        # Assign multiple departments
+        exam.department.set(department_ids)
 
         messages.success(request, f"Exam '{subject_name}' added successfully!")
         return redirect("exam_schedule")
@@ -603,7 +733,6 @@ def add_exam(request):
         "departments": departments,
         "sessions": sessions
     })
-
 
 
 def edit_exam(request, exam_id):
@@ -615,12 +744,14 @@ def edit_exam(request, exam_id):
         exam.subject_code = request.POST.get("subject_code")
         exam.subject_name = request.POST.get("subject_name")
 
-        # Update department
-        dept_id = request.POST.get("department")
-        if dept_id:
-            exam.department = Department.objects.get(id=dept_id)
+        # Update departments (many-to-many)
+        dept_ids = request.POST.getlist("department")  # getlist for multiple selection
+        if dept_ids:
+            exam.department.set(Department.objects.filter(id__in=dept_ids))  # update M2M
+        else:
+            exam.department.clear()  # if no department selected, clear all
 
-        # Update session
+        # Update session (ForeignKey)
         session_id = request.POST.get("session")
         if session_id:
             exam.session = ExamSession.objects.get(id=session_id)
@@ -628,19 +759,23 @@ def edit_exam(request, exam_id):
         exam.save()
         messages.success(request, f"Exam '{exam.subject_name}' updated successfully!")
         return redirect("exam_schedule")
+    return redirect("exam_schedule")
 
-    context = {
-        "exam": exam,
-        "departments": departments,
-        "sessions": sessions,
-    }
-    return render(request, "admin/edit_exam.html", context)
-
-def delete_exam(request, exam_id):
+   
+def delete_exam(request, exam_id, department_id):
     exam = get_object_or_404(Exam, id=exam_id)
-    exam_name = exam.subject_name
-    exam.delete()
-    messages.success(request, f"Exam '{exam_name}' deleted successfully!")
+    department = get_object_or_404(Department, id=department_id)
+
+    # Remove the connection between exam and department
+    exam.department.remove(department)
+    messages.success(request, f"Department '{department.name}' removed from exam '{exam.subject_name}' successfully!")
+
+    # If exam has no more departments, delete the exam itself
+    if exam.department.count() == 0:
+        exam_name = exam.subject_name
+        exam.delete()
+        messages.success(request, f"Exam '{exam_name}' deleted as it has no more departments connected!")
+
     return redirect("exam_schedule")
 
 
@@ -656,7 +791,7 @@ def seating_map_detail(request, room_id):
     seats = list(Seating.objects.filter(room=room).order_by('seat_number'))
 
     benches = []
-    bench_capacity = 2  # 2 students per bench
+    bench_capacity = 1  # 2 students per bench
 
     seat_index = 0
     total_seats = len(seats)
@@ -724,6 +859,8 @@ def room_management(request):
             columns=columns,
             capacity=capacity
         )
+        messages.success(request, f"Room {room_number} added successfully with capacity {capacity}!")
+
         return redirect("room_management")
 
     # Get all rooms
@@ -754,6 +891,7 @@ def room_edit(request, pk):
         room.columns = int(request.POST.get("columns", 0))
         room.capacity = room.rows * room.columns
         room.save()
+        messages.success(request, f"Room '{room.room_number}' updated successfully!")
         return redirect("room_management")
 
     return redirect("room_management")
@@ -762,6 +900,7 @@ def room_edit(request, pk):
 def room_delete(request, pk):
     room = get_object_or_404(Room, pk=pk)
     room.delete()
+    messages.error(request, f"Room '{room.room_number}' Deleted successfully!")
     return redirect("room_management")
 
 def NewsManagement(request):
@@ -789,6 +928,13 @@ def news_approve(request, pk):
     news.status = "approved"
     news.save()
     return redirect("news_updates")
+
+def delete_news(request, news_id):
+    news = get_object_or_404(NewsUpdate, id=news_id)
+    title = news.title
+    news.delete()
+    messages.success(request, f"News '{title}' has been deleted successfully!")
+    return redirect(request.META.get("HTTP_REFERER", "admin_dashboard"))
 
 def news_reject(request, pk):
     news = get_object_or_404(NewsUpdate, pk=pk)
