@@ -75,12 +75,13 @@
                 <div class="row g-3">
                     <!-- Roll Number -->
                     <div class="col-12 col-sm-6 col-lg-3">
-                        {% include 'components/Card.html' with title="Roll Number" value=student.roll_number icon="bi bi-person-badge" color_start="#3b82f6" color_end="#2563eb" %}
+                        {% include 'components/Card.html' with title="Roll Number" value=user.username icon="bi bi-person-badge" color_start="#3b82f6" color_end="#2563eb" %}
                     </div>
 
                     <!-- Name -->
                     <div class="col-12 col-sm-6 col-lg-3">
-                        {% include 'components/Card.html' with title="Name" value=student.name icon="bi-people-fill" color_start="#22c55e" color_end="#16a34a" %}
+                        {% include 'components/Card.html' with title="Name" value=user.first_name icon="bi-people-fill" color_start="#22c55e" color_end="#16a34a" %}
+
                     </div>
 
                     <!-- Next Exam -->
@@ -97,7 +98,7 @@
                         {% if next_exam %}
                             {% include 'components/Card.html' with title="Room" value=next_exam.room.room_number icon="bi bi-door-open" color_start="#f97316" color_end="#ea580c" %}
                         {% else %}
-                            {% include 'components/Card.html' with title="Room" value="-" icon="bi bi-door-open" color_start="#f97316" color_end="#ea580c" %}
+                            {% include 'components/Card.html' with title="Room" value="N/A" icon="bi bi-door-open" color_start="#f97316" color_end="#ea580c" %}
                         {% endif %}
                     </div>
                 </div>

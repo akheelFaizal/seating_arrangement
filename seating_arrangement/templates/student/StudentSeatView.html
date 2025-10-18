@@ -55,10 +55,11 @@
                 <!-- Student Summary Cards -->
                 <div class="row g-3 mb-4">
                     <div class="col-12 col-sm-6 col-lg-3">
-                        {% include 'components/Card.html' with title="Roll Number" value=student.roll_number icon="bi bi-person-badge" color_start="#3b82f6" color_end="#2563eb" %}
+                        {% include 'components/Card.html' with title="Roll Number" value=user.username icon="bi bi-person-badge" color_start="#3b82f6" color_end="#2563eb" %}
+                          
                     </div>
                     <div class="col-12 col-sm-6 col-lg-3">
-                        {% include 'components/Card.html' with title="Name" value=student.name icon="bi bi-people-fill" color_start="#22c55e" color_end="#16a34a" %}
+                        {% include 'components/Card.html' with title="Name" value=user.first_name icon="bi bi-people-fill" color_start="#22c55e" color_end="#16a34a" %}
                     </div>
                     <div class="col-12 col-sm-6 col-lg-3">
                         {% if next_exam %}
@@ -77,9 +78,8 @@
                 </div>
 
                 <!-- Exam Seats List -->
-                <div class="row mb-2">
-                    <div class="col">
-                        <h4 class="fw-bold mb-3 text-dark">Your Exam Seats</h4>
+                <div class="glass-bg mb-4">
+                    <h4 class="fw-bold mb-4 text-dark">Your Exam Seats</h4>
 
                         {% for seat in seatings %}
                         <div class="seat-card d-flex align-items-center">
@@ -105,25 +105,24 @@
                         {% empty %}
                         <p>No allocated seats found.</p>
                         {% endfor %}
-                    </div>
                 </div>
 
                 
 
                 <!-- Announcements -->
-                <div class="row">
-                    <div class="col">
-                        <h5 class="fw-bold mb-3 text-dark">
-                            <i class="bi bi-megaphone-fill text-warning me-2"></i> Latest Announcements
-                        </h5>
-                        {% for announcement in announcements %}
-                        <div class="announcement-box">
-                            <strong>{{ announcement.title }}</strong>
-                            <div class="small text-muted">{{ announcement.content }}</div>
+                <div class="row mt-4">
+                    <div class="col-6">
+                        <div class="section-box">
+                            <h5 class="fw-bold mb-3"><i class="bi bi-megaphone-fill me-2 text-warning"></i> Latest Announcements</h5>
+                            {% for announcement in announcements %}
+                            <div class="p-3 bg-light rounded news-item mb-2">
+                                <strong>{{ announcement.title }}</strong><br>
+                                <small class="text-muted">{{ announcement.content }}</small>
+                            </div>
+                            {% empty %}
+                            <p class="text-muted">No announcements available.</p>
+                            {% endfor %}
                         </div>
-                        {% empty %}
-                        <p>No announcements at this time.</p>
-                        {% endfor %}
                     </div>
                 </div>
 

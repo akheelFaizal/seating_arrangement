@@ -162,15 +162,29 @@ def StudentOverView(request):
 
 
 @login_required
+# to show optional alert message
+
 def StudentSeatview(request):
-    # Get the logged-in student based on roll number
-    student = get_object_or_404(Student, roll_number=request.user.username)
+    # Try to get the student safely
+    student = Student.objects.filter(roll_number=request.user.username).first()
+
+    # If no student record found
+    if not student:
+        context = {
+            "student": None,
+            "seatings": [],
+            "next_exam": None,
+            "announcements": NewsUpdate.objects.filter(status='approved').order_by('-created_at'),
+            "today": date.today(),
+            "hall_ticket_url": "#",
+        }
+        return render(request, "student/StudentSeatView.html", context)
 
     # Fetch all seatings for this student
     seatings = (
-    Seating.objects.filter(student=student)
-    .select_related("exam", "exam__session", "room")
-    .order_by("exam__session__date", "exam__session__start_time")
+        Seating.objects.filter(student=student)
+        .select_related("exam", "exam__session", "room")
+        .order_by("exam__session__date", "exam__session__start_time")
     )
 
     # Next upcoming exam
@@ -180,7 +194,7 @@ def StudentSeatview(request):
         .first()
     )
 
-    # Announcements (replace with DB model if available)
+    # Announcements
     announcements = NewsUpdate.objects.filter(status='approved').order_by('-created_at')
 
     context = {
@@ -189,8 +203,9 @@ def StudentSeatview(request):
         "next_exam": next_exam,
         "announcements": announcements,
         "today": date.today(),
-        "hall_ticket_url": "#",  # Replace with actual hall ticket link if available
+        "hall_ticket_url": "#",
     }
+
     return render(request, "student/StudentSeatView.html", context)
 
 
@@ -200,7 +215,7 @@ def StudentResultView(request):
 
 def StudentExamDetail(request):
     # Get logged-in student
-    student = get_object_or_404(Student, roll_number=request.user.username)
+    student = Student.objects.filter(roll_number=request.user.username).first()
 
     # Fetch seatings (exams for this student)
     seatings = (
@@ -1159,7 +1174,8 @@ def invigilatorProfile(request):
 
 def signup(request):
     if request.method == "POST":
-        name = request.POST.get("name")
+        name = request.POST.get("fname")
+        lname=request.POST.get("lname")
         password = request.POST.get("password")
         roll_number = request.POST.get("roll_number")
         course_id = request.POST.get("course")
@@ -1179,6 +1195,7 @@ def signup(request):
         user = CustomUser.objects.create_user(
             username=roll_number,
             first_name=name,
+            last_name=lname,
             role="student",
             course=course_obj,
             department=dept_obj,
