@@ -1360,34 +1360,49 @@ def add_invigilator(request):
             invigilator.save()
             messages.success(request, "Invigilator added successfully.")
 
-            send_invigilator_credentials(email, username, password)
+            try:
+                send_invigilator_credentials(email, username, password)
+
+            except Exception as e:
+                messages.warning(request, f"Invigilator added, but email failed ❌: {e}")
+
 
         
         return redirect("invigilator_management")
         
 
 def assign_invigilator_room(request, invigilator_id):
-    invigilator = get_object_or_404(CustomUser, id=invigilator_id, role="invigilator")
+    invigilator = CustomUser.objects.filter(id=invigilator_id, role="invigilator").first()
+    if not invigilator:
+        messages.error(request, "Invigilator not found ❌")
+        return redirect("invigilator_management")
 
     if request.method == "POST":
         room_id = request.POST.get("room")
         if room_id:
-            room = get_object_or_404(Room, id=room_id)
-            # Remove invigilator from any previous room
-            Room.objects.filter(supervisor=invigilator).update(supervisor=None)
-            # Assign to selected room
-            room.supervisor = invigilator
-            room.save()
-            messages.success(request, f"{invigilator.name} assigned to {room.room_number}.")
-        return redirect("invigilator_management")
+            room = Room.objects.filter(id=room_id).first()
+            if room:
+                # Remove invigilator from any previous room
+                Room.objects.filter(supervisor=invigilator).update(supervisor=None)
+                # Assign to selected room
+                room.supervisor = invigilator
+                room.save()
+                messages.success(request, f"{invigilator.name} assigned to {room.room_number} ✅")
+            else:
+                messages.error(request, "Room not found ❌")
+        else:
+            messages.warning(request, "No room selected ⚠️")
+
+    return redirect("invigilator_management")
     
 def reinstate_student(request, id):
-    student = get_object_or_404(Student, id=id)
+    student = Student.objects.filter(id=id).first()  # safe fetch
+    if not student:
+        # Optionally, you can add a message here
+        return redirect('invigilator_management')
 
-    if student.is_debarred:
-        student.is_debarred = False
-    else:
-        student.is_debarred = True
+    # Toggle is_debarred
+    student.is_debarred = not student.is_debarred
     student.save()
     return redirect('invigilator_management')
 
@@ -1441,15 +1456,18 @@ def invigilatorAssignedStudents(request):
         return render(request, "invigilator/assignedstudent.html", context)
 
 
-
 def edit_student(request):
     if request.method == "POST":
         student_id = request.POST.get("student_id")
-        student = get_object_or_404(Student, id=student_id)
+        student = Student.objects.filter(id=student_id).first()  # safe fetch
 
-        # Update fields
-        student.roll_number = request.POST.get("roll_number")
-        student.name = request.POST.get("name")
+        if not student:
+            messages.error(request, "Student not found ❌")
+            return redirect("student_management")
+
+        # Update fields safely
+        student.roll_number = request.POST.get("roll_number", student.roll_number)
+        student.name = request.POST.get("name", student.name)
 
         dept_id = request.POST.get("department")
         course_id = request.POST.get("course")
@@ -1457,21 +1475,31 @@ def edit_student(request):
         is_debarred = request.POST.get("is_debarred")
 
         if dept_id:
-            student.department = get_object_or_404(Department, id=dept_id)
-        if course_id:
-            student.course = get_object_or_404(Course, id=course_id)
-        if year:
-            student.year = int(year)
+            department = Department.objects.filter(id=dept_id).first()
+            if department:
+                student.department = department
 
-        student.is_debarred = True if is_debarred else False
+        if course_id:
+            course = Course.objects.filter(id=course_id).first()
+            if course:
+                student.course = course
+
+        if year:
+            try:
+                student.year = int(year)
+            except ValueError:
+                messages.warning(request, "Invalid year provided, keeping previous value.")
+
+        student.is_debarred = bool(is_debarred)
 
         student.save()
 
         messages.success(request, "Student details updated successfully ✅")
-        return redirect("student_management")  # <-- replace with your main student list view name
+        return redirect("student_management")
 
     messages.error(request, "Invalid request ❌")
     return redirect("student_management")
+
 
 def student_add(request):
     if request.method == "POST":
@@ -1518,15 +1546,21 @@ def student_add(request):
 
 def delete_invigilator(request, id):
     if request.method == "POST":
-        invigilator = get_object_or_404(CustomUser, id=id, role="invigilator")
-        invigilator.delete()
-        messages.success(request, "Invigilator deleted successfully.")
+        invigilator = CustomUser.objects.filter(id=id, role="invigilator").first()
+        if invigilator:
+            invigilator.delete()
+            messages.success(request, "Invigilator deleted successfully ✅")
+        else:
+            messages.error(request, "Invigilator not found ❌")
     return redirect("invigilator_management")
 
 def delete_student_user(request, id):
     if request.method == "POST":
-        student = get_object_or_404(CustomUser, id=id, role="student")
-        student.delete()
-    messages.success(request, "Student deleted successfully.")
+        student = CustomUser.objects.filter(id=id, role="student").first()
+        if student:
+            student.delete()
+            messages.success(request, "Student deleted successfully ✅")
+        else:
+            messages.error(request, "Student not found ❌")
     return redirect("invigilator_management")
 
