@@ -427,7 +427,7 @@ def add_room(request):
         room_number = request.POST.get("room_number")
         rows = request.POST.get('rows')
         cols = request.POST.get('columns')
-        capacity = int(rows) * int(cols) * 2
+        capacity = int(rows) * int(cols) 
         Room.objects.create(room_number=room_number, capacity=capacity, rows=rows, columns=cols)
         messages.success(request, f"Room {room_number} added successfully!")   
     
